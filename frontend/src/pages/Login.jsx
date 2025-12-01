@@ -11,30 +11,35 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    const users = JSON.parse(localStorage.getItem("users_db") || "[]");
-    const foundUser = users.find(u => u.email === email && u.password === password);
+    try {
+      const res = await fetch("http://localhost:5000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (!foundUser) {
-      setError("Неверный email или пароль");
-      return;
+      const data = await res.json();
+      if (!res.ok) return setError(data.error);
+
+      login(data);
+      navigate(`/profile/${data.id}`);
+    } catch {
+      setError("Ошибка сервера");
     }
-
-    login(foundUser);
-    navigate(`/profile/${foundUser.id}`);
   };
 
   return (
-    <Box sx={{ maxWidth: 400, mx: "auto", mt: 8, p: 3 }}>
+    <Box sx={{ maxWidth: 400, mx: "auto", mt: 10, p: 3, boxShadow: 3, borderRadius: 2 }}>
       <Typography variant="h5" sx={{ mb: 2, textAlign: "center" }}>Вход</Typography>
-      {error && <Alert severity="error">{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 15 }}>
-        <TextField label="Email" value={email} onChange={e => setEmail(e.target.value)} fullWidth />
+        <TextField label="Email" type="email" value={email} onChange={e => setEmail(e.target.value)} fullWidth />
         <TextField label="Пароль" type="password" value={password} onChange={e => setPassword(e.target.value)} fullWidth />
-        <Button type="submit" variant="contained">Войти</Button>
+        <Button variant="contained" type="submit" size="large">Войти</Button>
       </form>
       <Typography sx={{ mt: 2, textAlign: "center" }}>
         Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>

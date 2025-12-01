@@ -13,36 +13,18 @@ export default function Navbar() {
 
   const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const handleProfileClick = () => {
-    if (user) navigate(`/profile/${user.id}`);
-  };
-
   return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "10px 20px",
-        backgroundColor: "#1976d2",
-        color: "white",
-      }}
-    >
+    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 20px", backgroundColor: "#1976d2", color: "white" }}>
       {/* Левое меню */}
       <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
         <Typography variant="h6">
-          <Link to="/" style={{ textDecoration: "none", color: "white" }}>
-            BuyPeak
-          </Link>
+          <Link to="/" style={{ textDecoration: "none", color: "white" }}>BuyPeak</Link>
         </Typography>
-        <Link to="/catalog" style={{ textDecoration: "none", color: "white" }}>
-          Каталог
-        </Link>
+        <Link to="/catalog" style={{ textDecoration: "none", color: "white" }}>Каталог</Link>
       </Box>
 
       {/* Правое меню */}
       <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-        {/* Иконка корзины с количеством */}
         <IconButton color="inherit" onClick={() => navigate("/cart")}>
           <Badge badgeContent={totalQty} color="error">
             <ShoppingCart sx={{ color: "white" }} />
@@ -52,42 +34,22 @@ export default function Navbar() {
         {!user ? (
           <>
             <Link to="/login" style={{ textDecoration: "none" }}>
-              <Button variant="contained" color="secondary">
-                Login
-              </Button>
+              <Button variant="contained" color="secondary">Login</Button>
             </Link>
             <Link to="/register" style={{ textDecoration: "none" }}>
-              <Button variant="contained" color="secondary">
-                Register
-              </Button>
+              <Button variant="contained" color="secondary">Register</Button>
             </Link>
           </>
         ) : (
           <>
             {/* Ник и аватарка ведут на профиль */}
-            <Typography 
-              component={Link} 
-              to={`/profile/${user.id}`} 
-              sx={{ textDecoration: "none", color: "white", fontSize: 21 }}
-            >
-              {user.name || "Гость"}
-            </Typography>
-            <Avatar 
-              component={Link} 
-              to={`/profile/${user.id}`} 
-              src={user.avatar || defaultAvatar} 
-              alt={user.name} 
-              sx={{ width: 35, height: 35, cursor: "pointer" }}
-            />
-
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={logout}
-              sx={{ ml: 1 }}
-            >
-              Logout
-            </Button>
+            <Link to={`/profile/${user.id}`} style={{ textDecoration: "none", color: "white", fontSize: "21px" }}>
+              {user.name}
+            </Link>
+            <Link to={`/profile/${user.id}`} style={{ display: "inline-block" }}>
+              <Avatar src={user.avatar ? user.avatar : defaultAvatar} alt={user.name} sx={{ width: 35, height: 35, cursor: "pointer" }} />
+            </Link>
+            <Button variant="contained" color="secondary" onClick={logout} sx={{ ml: 1 }}>Logout</Button>
           </>
         )}
       </Box>

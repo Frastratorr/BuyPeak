@@ -66,21 +66,37 @@ export default function Profile() {
 
   if (!profileUser) return null;
 
+  // Загрузка аватара
   const handleAvatarChange = (e) => {
     if (!isMyProfile) return;
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = () => setAvatar(reader.result);
+      reader.onload = () => setAvatar(reader.result); // Base64
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSave = () => {
+  // Сохранение профиля
+  const handleSave = async () => {
     if (!isMyProfile) return;
-    const updatedUser = { ...currentUser, name, email, avatar, bio };
-    updateUser(updatedUser);
-    showNotification("Профиль обновлён!");
+
+    try {
+      const res = await fetch(`http://localhost:5000/users/${currentUser.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, avatar, bio }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      updateUser(data); // обновляем контекст и localStorage
+      showNotification("Профиль обновлён!");
+    } catch (err) {
+      console.error(err);
+      showNotification("Ошибка при обновлении профиля");
+    }
   };
 
   return (
@@ -93,7 +109,7 @@ export default function Profile() {
       </Box>
 
       <Box sx={{ padding: 3, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-        <Avatar src={avatar} sx={{ width: 130, height: 130, mb: 2 }} />
+        <Avatar src={avatar || defaultAvatar} sx={{ width: 130, height: 130, mb: 2 }} />
         {isMyProfile && <Button variant="outlined" component="label">Загрузить аватар<input type="file" hidden onChange={handleAvatarChange} /></Button>}
         {isMyProfile && (
           <>
