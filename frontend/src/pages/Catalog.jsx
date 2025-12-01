@@ -1,6 +1,20 @@
 import { useState } from "react";
 import ProductCard from '../components/ProductCard';
 import { productsData } from "../data/products";
+import { 
+  Box, 
+  Typography, 
+  TextField, 
+  Button, 
+  Paper, 
+  Stack, 
+  Divider 
+} from "@mui/material";
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+// 👇 ИМПОРТ ДОЛЛАРА
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import InventoryIcon from '@mui/icons-material/Inventory';
 
 export default function Catalog() {
   const [minPrice, setMinPrice] = useState("");
@@ -15,126 +29,128 @@ export default function Catalog() {
     if (maxQuantity && p.quantity > Number(maxQuantity)) return false;
     return true;
   });
+
   return (
-    <div style={{ display: "flex", padding: "20px", gap: "20px", overflowX: "hidden" }}>
+    <Box sx={{ display: "flex", p: 4, gap: 4, maxWidth: "1400px", mx: "auto", minHeight: "100vh", bgcolor: "#f9f9f9", alignItems: "flex-start" }}>
 
-      {/* ---------- ЛЕВАЯ ЧАСТЬ (КАТАЛОГ) ---------- */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <h1 style={{ marginBottom: "20px" }}>Каталог товаров</h1>
+      {/* ---------- ЛЕВАЯ ЧАСТЬ (ТОВАРЫ - СПИСОК) ---------- */}
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography variant="h4" sx={{ mb: 3, fontWeight: "bold", color: "#333" }}>
+          Каталог товаров
+        </Typography>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "20px",
-            flexDirection: "column",
-            width: "100%"
+        {products.length === 0 ? (
+           <Box sx={{ textAlign: 'center', mt: 5, color: '#777' }}>
+             <Typography variant="h6">Товары не найдены 😔</Typography>
+             <Typography variant="body2">Попробуйте изменить параметры фильтров</Typography>
+           </Box>
+        ) : (
+          <Stack spacing={3}>
+            {products.map(product => (
+              <Box key={product.id} sx={{ width: '100%' }}>
+                <ProductCard {...product} />
+              </Box>
+            ))}
+          </Stack>
+        )}
+      </Box>
+
+      {/* ---------- ПРАВАЯ ЧАСТЬ (ФИЛЬТРЫ - САЙДБАР) ---------- */}
+      <Box sx={{ width: "300px", flexShrink: 0 }}>
+        <Paper
+          elevation={3}
+          sx={{
+            p: 3,
+            borderRadius: 3,
+            bgcolor: "white",
+            position: "sticky",
+            top: "100px", 
           }}
         >
-          {products.map(product => (
-            <ProductCard key={product.id} {...product} />
-          ))}
-        </div>
-      </div>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <FilterAltIcon color="primary" />
+            <Typography variant="h6" fontWeight="bold">Фильтры</Typography>
+          </Box>
+          
+          <Divider sx={{ mb: 3 }} />
 
-      {/* ---------- ПРАВАЯ ЧАСТЬ (ФИЛЬТРЫ) ---------- */}
-      <div
-        style={{
-          width: "300px",
-          padding: "20px",
-          borderRadius: "10px",
-          border: "1px solid #ddd",
-          background: "white",
-          position: "fixed",
-          top: "58px",
-          right: "20px",
-          height: "fit-content",
-          marginTop: '38px'
-        }}
-      >
-        <h3>Фильтры 🔍</h3>
+          <Stack spacing={3}>
+            {/* Цена */}
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                {/* 👇 ИСПОЛЬЗОВАНИЕ ИКОНКИ ДОЛЛАРА */}
+                <AttachMoneyIcon fontSize="small" color="action" /> Цена
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <TextField
+                  label="От"
+                  type="number"
+                  size="small"
+                  value={minPrice}
+                  onChange={e => setMinPrice(e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  label="До"
+                  type="number"
+                  size="small"
+                  value={maxPrice}
+                  onChange={e => setMaxPrice(e.target.value)}
+                  fullWidth
+                />
+              </Box>
+            </Box>
 
-        {/* Фильтр по цене */}
-        <div style={{ marginTop: "20px" }}>
-          <label>Мин. цена</label>
-          <input
-            type="number"
-            value={minPrice}
-            onChange={e => setMinPrice(e.target.value)}
-            style={{
-              width: "100%",
-              marginTop: "5px",
-              padding: "8px",
-              borderRadius: "5px",
-              border: "1px solid #ccc"
-            }}
-          />
+            {/* Количество */}
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <InventoryIcon fontSize="small" color="action" /> Наличие
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <TextField
+                  label="От"
+                  type="number"
+                  size="small"
+                  value={minQuantity}
+                  onChange={e => setMinQuantity(e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  label="До"
+                  type="number"
+                  size="small"
+                  value={maxQuantity}
+                  onChange={e => setMaxQuantity(e.target.value)}
+                  fullWidth
+                />
+              </Box>
+            </Box>
 
-          <label style={{ marginTop: "15px", display: "block" }}>Макс. цена</label>
-          <input
-            type="number"
-            value={maxPrice}
-            onChange={e => setMaxPrice(e.target.value)}
-            style={{
-              width: "100%",
-              marginTop: "5px",
-              padding: "8px",
-              borderRadius: "5px",
-              border: "1px solid #ccc"
-            }}
-          />
-
-          <label style={{ marginTop: "15px", display: "block" }}>Мин. количество</label>
-          <input
-            type="number"
-            value={minQuantity}
-            onChange={e => setMinQuantity(e.target.value)}
-            style={{
-              width: "100%",
-              marginTop: "5px",
-              padding: "8px",
-              borderRadius: "5px",
-              border: "1px solid #ccc"
-            }}
-            />
-
-            <label style={{ marginTop: "15px", display: "block" }}>Макс. количество</label>
-            <input
-              type="number"
-              value={maxQuantity}
-              onChange={e => setMaxQuantity(e.target.value)}
-              style={{
-                width: "100%",
-                marginTop: "5px",
-                padding: "8px",
-                borderRadius: "5px",
-                border: "1px solid #ccc"
+            {/* Кнопка сброса */}
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<RestartAltIcon />}
+              onClick={() => {
+                setMinPrice("");
+                setMaxPrice("");
+                setMaxQuantity("");
+                setMinQuantity("");
               }}
-            />
-        </div>
+              sx={{ 
+                mt: 2, 
+                borderRadius: "10px", 
+                textTransform: "none", 
+                fontWeight: "bold",
+                boxShadow: "0 4px 10px rgba(25, 118, 210, 0.3)"
+              }}
+            >
+              Сбросить фильтры
+            </Button>
+          </Stack>
+        </Paper>
+      </Box>
 
-        {/* Кнопка сброса */}
-        <button
-          onClick={() => {
-            setMinPrice("");
-            setMaxPrice("");
-            setMaxQuantity("");
-            setMinQuantity("");
-          }}
-          style={{
-            marginTop: "20px",
-            width: "100%",
-            padding: "10px",
-            background: "#1976d2",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            fontWeight: "600"
-          }}
-        >
-          Сбросить фильтры
-        </button>
-      </div>
-    </div>
+    </Box>
   );
 }

@@ -1,0 +1,253 @@
+{
+  "users": [
+    {
+      "id": 1764523384438,
+      "name": "dolboeb",
+      "email": "dolboeb@gmail.com",
+      "password": "123",
+      "avatar": "/images/default-avatar.jpg",
+      "bio": "Привет! Я новый пользователь.",
+      "createdAt": "2025-12-02T10:00:00.000Z"
+    },
+    {
+      "id": 1764523403140,
+      "name": "huy",
+      "email": "huy@gmail.com",
+      "password": "123",
+      "avatar": "/images/default-avatar.jpg",
+      "bio": "Привет! Я новый пользователь.",
+      "createdAt": "2025-12-02T10:00:00.000Z"
+    },
+    {
+      "id": 1764525980403,
+      "name": "q1",
+      "email": "q@gmail.com",
+      "password": "123",
+      "avatar": "/images/default-avatar.jpg",
+      "bio": "Привет! Я новый пользователь.",
+      "createdAt": "2025-12-02T10:00:00.000Z"
+    },
+    {
+      "id": 1764527204139,
+      "name": "dw",
+      "email": "dw@gmail.com",
+      "password": "123",
+      "avatar": "/images/default-avatar.jpg",
+      "bio": "Привет! Я новый пользователь.",
+      "createdAt": "2025-12-02T10:00:00.000Z"
+    },
+    {
+      "id": 1764531100886,
+      "name": "dq",
+      "email": "dq@gmail.com",
+      "password": "123",
+      "avatar": "/images/default-avatar.jpg",
+      "bio": "Привет! Я новый пользователь.",
+      "createdAt": "2025-12-02T10:00:00.000Z"
+    },
+    {
+      "id": 1764610296133,
+      "name": "huy",
+      "email": "huy1@gmail.com",
+      "password": "123",
+      "avatar": "/images/default-avatar.jpg",
+      "bio": "Привет! Я новый пользователь.",
+      "createdAt": "2025-12-02T10:00:00.000Z"
+    },
+    {
+      "id": 1764610336144,
+      "name": "q1",
+      "email": "q1@gmail.com",
+      "password": "123",
+      "avatar": "/images/default-avatar.jpg",
+      "bio": "Привет! Я новый пользователь.",
+      "createdAt": "2025-12-02T10:00:00.000Z"
+    },
+    {
+      "id": 1764614721173,
+      "name": "d",
+      "email": "d@gmail.com",
+      "password": "123",
+      "avatar": "/images/default-avatar.jpg",
+      "bio": "Привет! Я новый пользователь.",
+      "createdAt": "2025-12-02T10:00:00.000Z"
+    },
+    {
+      "id": 1764614978030,
+      "name": "1",
+      "email": "1@gmail.com",
+      "password": "123",
+      "avatar": "/images/default-avatar.jpg",
+      "bio": "Привет! Я новый пользователь.",
+      "createdAt": "2025-12-02T10:00:00.000Z"
+    },
+    {
+      "id": 1764615739715,
+      "name": "Вася нахуй",
+      "email": "qq@gmail.com",
+      "password": "123",
+      "avatar": "/images/default-avatar.jpg",
+      "bio": "я підор",
+      "createdAt": "2025-12-02T10:00:00.000Z"
+    },
+    {
+      "id": 1764617944471,
+      "name": "admin",
+      "email": "admin@gmail.com",
+      "password": "admin",
+      "avatar": "/images/default-avatar.jpg",
+      "bio": "Привет! Я нищий!",
+      "createdAt": "2025-12-02T10:00:00.000Z"
+    },
+    {
+      "id": 1764626840193,
+      "name": "piska",
+      "email": "piska@gmail.com",
+      "password": "123",
+      "avatar": "/images/default-avatar.jpg",
+      "bio": "Привет! Я новый пользователь.",
+      "createdAt": "2025-12-02T10:00:00.000Z"
+    }
+  ],
+  "reviews": [
+    {
+      "id": 1764531070451,
+      "text": "dqdcw",
+      "rating": 5,
+      "nickname": "dw",
+      "avatar": "/images/default-avatar.jpg",
+      "userId": 1764527204139,
+      "date": 1764531070396,
+      "productId": 1
+    },
+    {
+      "id": 1764531079160,
+      "text": "fergrgrf",
+      "rating": 1,
+      "nickname": "dw",
+      "avatar": "/images/default-avatar.jpg",
+      "userId": 1764527204139,
+      "date": 1764531079153,
+      "productId": 1
+    },
+    {
+      "id": 1764610305486,
+      "text": "dmfiffmfikefef",
+      "rating": 5,
+      "nickname": "huy",
+      "avatar": "/images/default-avatar.jpg",
+      "userId": 1764610296133,
+      "date": 1764610305476,
+      "productId": 1
+    },
+    {
+      "id": 1764610319094,
+      "text": "eowrv,ewd",
+      "rating": 4,
+      "nickname": "huy",
+      "avatar": "/images/default-avatar.jpg",
+      "userId": 1764610296133,
+      "date": 1764610319085,
+      "productId": 1
+    },
+    {
+      "id": 1764613921012,
+      "text": "rvrevfef",
+      "rating": 4,
+      "nickname": "q1",
+      "avatar": "/images/default-avatar.jpg",
+      "userId": 1764610336144,
+      "date": 1764613921005,
+      "productId": 1
+    },
+    {
+      "id": 1764615711501,
+      "text": "камдзукмбау",
+      "rating": 5,
+      "nickname": "1",
+      "avatar": "/images/default-avatar.jpg",
+      "userId": 1764614978030,
+      "date": 1764615711457,
+      "productId": 1
+    },
+    {
+      "id": 1764615774945,
+      "text": "піздаааа",
+      "rating": 5,
+      "nickname": "Вася нахуй",
+      "avatar": "/images/default-avatar.jpg",
+      "userId": 1764615739715,
+      "date": 1764615774927,
+      "productId": 1
+    },
+    {
+      "id": 1764626255896,
+      "text": "pisun",
+      "rating": 3,
+      "nickname": "admin",
+      "avatar": "/images/default-avatar.jpg",
+      "userId": 1764617944471,
+      "date": 1764626255885,
+      "productId": 1
+    },
+    {
+      "id": 1764626434638,
+      "text": "вфвйцв",
+      "rating": 4,
+      "nickname": "admin",
+      "avatar": "/images/default-avatar.jpg",
+      "userId": 1764617944471,
+      "date": 1764626434625,
+      "productId": 2
+    },
+    {
+      "id": 1764626444957,
+      "text": "екипакк",
+      "rating": 5,
+      "nickname": "admin",
+      "avatar": "/images/default-avatar.jpg",
+      "userId": 1764617944471,
+      "date": 1764626444940,
+      "productId": 1
+    }
+  ],
+  "carts": [
+    {
+      "userId": "1764610336144",
+      "items": [
+        {
+          "id": 1,
+          "name": "Товар 1",
+          "image": "/src/assets/img/products/product1.jpg",
+          "price": 100,
+          "description": "Описание 1",
+          "fulldescription": "Полное описание 1",
+          "quantity": 6
+        },
+        {
+          "id": 4,
+          "name": "3.14door ass",
+          "image": "/src/assets/img/products/product4.jpg",
+          "price": 1488695267,
+          "description": "товар для куртих пацвнов ",
+          "fulldescription": "ето внатури крутой товар для олдов 67 когда ви покупаєье вам в подарок идет брейнрот и бутилочка сперми трицератопса",
+          "quantity": 2
+        }
+      ]
+    },
+    {
+      "userId": "1764617944471",
+      "items": [
+        {
+          "id": 1,
+          "name": "Товар 1",
+          "image": "/src/assets/img/products/product1.jpg",
+          "price": 100,
+          "description": "Описание 1",
+          "fulldescription": "Полное описание 1",
+          "quantity": 3
+        }
+      ]
+    }
+  ]
+}

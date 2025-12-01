@@ -1,7 +1,21 @@
 import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { Box, TextField, Button, Typography, Alert, Paper } from "@mui/material";
+import { 
+  Box, 
+  TextField, 
+  Button, 
+  Typography, 
+  Alert, 
+  Paper, 
+  Avatar, 
+  InputAdornment,
+  CircularProgress
+} from "@mui/material";
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import PersonIcon from '@mui/icons-material/Person';
+import EmailIcon from '@mui/icons-material/Email';
+import LockIcon from '@mui/icons-material/Lock';
 
 export default function Register() {
   const { login } = useContext(AuthContext);
@@ -11,6 +25,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,6 +36,8 @@ export default function Register() {
       return;
     }
 
+    setLoading(true);
+
     try {
       const res = await fetch("http://localhost:5000/users", {
         method: "POST",
@@ -29,29 +46,121 @@ export default function Register() {
       });
 
       const data = await res.json();
-      if (!res.ok) return setError(data.error);
+      
+      if (!res.ok) {
+        setLoading(false);
+        return setError(data.error);
+      }
 
       login(data);
       navigate(`/profile/${data.id}`);
     } catch {
-      setError("Ошибка сервера");
+      setError("Ошибка сервера. Попробуйте позже.");
+      setLoading(false);
     }
   };
 
   return (
-    <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
-      <Paper elevation={3} sx={{ padding: 4, width: 400, borderRadius: 2 }}>
-        <Typography variant="h5" sx={{ mb: 3, textAlign: "center", fontWeight: "bold" }}>Регистрация</Typography>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <TextField label="Имя" variant="outlined" fullWidth value={name} onChange={e => setName(e.target.value)} />
-          <TextField label="Email" type="email" variant="outlined" fullWidth value={email} onChange={e => setEmail(e.target.value)} />
-          <TextField label="Пароль" type="password" variant="outlined" fullWidth value={password} onChange={e => setPassword(e.target.value)} />
-          <Button type="submit" variant="contained" size="large" fullWidth sx={{ mt: 1 }}>Зарегистрироваться</Button>
-        </form>
-        <Typography sx={{ mt: 2, textAlign: "center", fontSize: 14 }}>
-          Уже есть аккаунт? <Link to="/login" style={{ textDecoration: "none", color: "#1976d2" }}>Войти</Link>
+    <Box 
+      sx={{ 
+        minHeight: "85vh",
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)" // Чуть другой градиент
+      }}
+    >
+      <Paper 
+        elevation={6} 
+        sx={{ 
+          p: 4, 
+          width: "100%", 
+          maxWidth: 450, 
+          borderRadius: 4,
+          display: "flex", 
+          flexDirection: "column", 
+          alignItems: "center" 
+        }}
+      >
+        <Avatar sx={{ m: 1, bgcolor: "primary.main", width: 56, height: 56 }}>
+          <PersonAddIcon fontSize="large" />
+        </Avatar>
+
+        <Typography component="h1" variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
+          Создание аккаунта
         </Typography>
+
+        {error && <Alert severity="error" sx={{ width: "100%", mb: 2 }}>{error}</Alert>}
+
+        <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 2 }}>
+          
+          <TextField
+            required
+            fullWidth
+            label="Ваше имя"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PersonIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <TextField
+            required
+            fullWidth
+            label="Email адрес"
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <TextField
+            required
+            fullWidth
+            label="Придумайте пароль"
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+          />
+
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            size="large"
+            disabled={loading}
+            sx={{ mt: 2, borderRadius: 2, height: 50, fontWeight: "bold", fontSize: "16px" }}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Зарегистрироваться"}
+          </Button>
+
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              Уже есть аккаунт?{" "}
+              <Link to="/login" style={{ textDecoration: "none", color: "#1976d2", fontWeight: "bold" }}>
+                Войти
+              </Link>
+            </Typography>
+          </Box>
+        </Box>
       </Paper>
     </Box>
   );

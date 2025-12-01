@@ -1,144 +1,339 @@
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { CartContext } from "../context/CartContext";
-import { useNavigate, useParams } from "react-router-dom";
-import { Box, Typography, Button, TextField, Avatar, Rating } from "@mui/material";
+import { useParams } from "react-router-dom";
+import { 
+  Box, 
+  Typography, 
+  Button, 
+  TextField, 
+  Avatar, 
+  Rating, 
+  CircularProgress,
+  Grid,
+  Paper,
+  IconButton,
+  Badge,
+  Stack,
+  InputAdornment,
+  Divider,
+  Card,
+  CardContent
+} from "@mui/material";
 import defaultAvatar from "../assets/img/default-avatar.jpg";
 import { useNotification } from "../context/NotificationContext";
 
+// Иконки
+import PhotoCamera from '@mui/icons-material/PhotoCamera';
+import SaveIcon from '@mui/icons-material/Save';
+import PersonIcon from '@mui/icons-material/Person';
+import EmailIcon from '@mui/icons-material/Email';
+import EditIcon from '@mui/icons-material/Edit';
+import HistoryIcon from '@mui/icons-material/History';
+import ArticleIcon from '@mui/icons-material/Article';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import InfoIcon from '@mui/icons-material/Info';
+import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
+
 export default function Profile() {
   const { user: currentUser, updateUser } = useContext(AuthContext);
-  const { cart } = useContext(CartContext);
-  const navigate = useNavigate();
   const { showNotification } = useNotification();
   const { id: userIdParam } = useParams();
 
   const [profileUser, setProfileUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [bio, setBio] = useState("");
   const [avatar, setAvatar] = useState(defaultAvatar);
   const [allReviews, setAllReviews] = useState([]);
-  const [purchaseHistory, setPurchaseHistory] = useState([]);
 
   const isMyProfile = currentUser && (!userIdParam || String(userIdParam) === String(currentUser.id));
 
   useEffect(() => {
-    if (!currentUser && !userIdParam) { navigate("/login"); return; }
+    let isMounted = true;
+    const targetId = userIdParam || (currentUser && currentUser.id);
 
-    const reviews = Object.keys(localStorage)
-      .filter(key => key.startsWith("reviews_"))
-      .map(key => JSON.parse(localStorage.getItem(key)))
-      .flat();
-    setAllReviews(reviews);
+    if (!targetId) {
+      if (isMounted) setLoading(false);
+      return;
+    }
 
-    const purchases = JSON.parse(localStorage.getItem("purchase_history") || "[]");
-    setPurchaseHistory(purchases);
+    async function loadProfile() {
+      try {
+        if (isMounted) setLoading(true);
 
-    if (isMyProfile) {
-      setProfileUser(currentUser);
-      setName(currentUser.name || "");
-      setEmail(currentUser.email || "");
-      setAvatar(currentUser.avatar || defaultAvatar);
-      setBio(currentUser.bio || "");
-    } else {
-      const userReviews = reviews.filter(r => String(r.userId) === String(userIdParam));
-      if (userReviews.length > 0) {
-        setProfileUser({
-          id: userIdParam,
-          nickname: userReviews[0].nickname || "Пользователь",
-          avatar: userReviews[0].avatar || defaultAvatar,
-          bio: userReviews[0].bio || ""
-        });
-        setName(userReviews[0].nickname || "Пользователь");
-        setEmail("");
-        setAvatar(userReviews[0].avatar || defaultAvatar);
-        setBio(userReviews[0].bio || "");
-      } else {
-        setProfileUser({ id: userIdParam, nickname: "Пользователь", avatar: defaultAvatar, bio: "" });
-        setName("Пользователь");
-        setEmail("");
-        setAvatar(defaultAvatar);
-        setBio("");
+        const res = await fetch(`http://localhost:5000/users/${targetId}`);
+        if (!res.ok) {
+          if (isMounted) { setProfileUser(null); setLoading(false); }
+          return;
+        }
+
+        const userData = await res.json();
+
+        if (isMounted) {
+          setProfileUser(userData);
+          setName(userData.name || "Пользователь");
+          setEmail(userData.email || "");
+          setAvatar(userData.avatar || defaultAvatar);
+          setBio(userData.bio || "");
+
+          const reviewsRes = await fetch("http://localhost:5000/reviews");
+          if (reviewsRes.ok) {
+            const reviewsData = await reviewsRes.json();
+            setAllReviews(reviewsData.filter(r => String(r.userId) === String(targetId)));
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        showNotification("Не удалось загрузить данные", "error");
+      } finally {
+        if (isMounted) setLoading(false);
       }
     }
-  }, [userIdParam, currentUser, isMyProfile, navigate]);
 
-  if (!profileUser) return null;
+    loadProfile();
+    return () => { isMounted = false; };
+  }, [userIdParam, currentUser]); 
 
-  // Загрузка аватара
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
+
+  if (!profileUser) {
+    return (
+      <Box sx={{ maxWidth: 600, mx: "auto", mt: 10, textAlign: 'center' }}>
+        <Typography variant="h5" color="error">Профиль не найден</Typography>
+        <Button onClick={() => { localStorage.clear(); window.location.href = "/"; }} sx={{ mt: 2 }}>Выйти</Button>
+      </Box>
+    );
+  }
+
   const handleAvatarChange = (e) => {
     if (!isMyProfile) return;
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = () => setAvatar(reader.result); // Base64
+      reader.onload = () => setAvatar(reader.result);
       reader.readAsDataURL(file);
     }
   };
 
-  // Сохранение профиля
   const handleSave = async () => {
     if (!isMyProfile) return;
-
     try {
+      const updatedUser = { ...profileUser, name, email, avatar, bio };
       const res = await fetch(`http://localhost:5000/users/${currentUser.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, avatar, bio }),
+        body: JSON.stringify(updatedUser),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-
-      updateUser(data); // обновляем контекст и localStorage
-      showNotification("Профиль обновлён!");
+      updateUser(data);
+      showNotification("Профиль успешно обновлён!", "success");
     } catch (err) {
-      console.error(err);
-      showNotification("Ошибка при обновлении профиля");
+      showNotification("Ошибка сохранения", "error");
     }
   };
 
   return (
-    <Box sx={{ maxWidth: 700, margin: "40px auto", borderRadius: 3, overflow: "hidden", boxShadow: 3 }}>
-      <Box sx={{ height: 150, background: "linear-gradient(90deg, #1976d2, #42a5f5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <Typography variant="h4" sx={{ color: "white", fontWeight: "bold" }}>{name || "Без имени"}</Typography>
-          {email && <Typography sx={{ color: "white", opacity: 0.8 }}>{email}</Typography>}
-        </Box>
+    <Box sx={{ maxWidth: "1200px", margin: "0 auto", padding: { xs: 2, md: 4 } }}>
+      
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" fontWeight="bold" sx={{ color: "#333" }}>
+          {isMyProfile ? "Личный кабинет" : `Профиль: ${name}`}
+        </Typography>
       </Box>
 
-      <Box sx={{ padding: 3, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-        <Avatar src={avatar || defaultAvatar} sx={{ width: 130, height: 130, mb: 2 }} />
-        {isMyProfile && <Button variant="outlined" component="label">Загрузить аватар<input type="file" hidden onChange={handleAvatarChange} /></Button>}
-        {isMyProfile && (
-          <>
-            <TextField label="Имя" value={name} onChange={e => setName(e.target.value)} fullWidth />
-            <TextField label="Email" value={email} onChange={e => setEmail(e.target.value)} fullWidth />
-            <TextField label="Био" multiline rows={3} value={bio} onChange={e => setBio(e.target.value)} fullWidth />
-            <Button variant="contained" color="primary" onClick={handleSave} sx={{ mt: 2 }}>Сохранить профиль</Button>
-          </>
-        )}
-        {!isMyProfile && <Typography sx={{ opacity: 0.8, width: "100%" }}>{bio || "Пользователь пока не добавил био"}</Typography>}
-
-        <Box sx={{ width: "100%", mt: 4 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>Отзывы</Typography>
-          {allReviews.filter(r => String(r.userId) === String(profileUser.id)).length === 0 ? (
-            <Typography>Отзывов пока нет.</Typography>
-          ) : (
-            allReviews
-              .filter(r => String(r.userId) === String(profileUser.id))
-              .map(r => (
-                <Box key={r.id} sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 2, p: 2, border: "1px solid #ccc", borderRadius: 2, background: "#f9f9f9" }}>
-                  <Typography sx={{ fontWeight: 600 }}>{r.nickname || "Пользователь"}</Typography>
-                  <Rating value={r.rating || 0} readOnly size="small" />
-                  <Typography>{r.text}</Typography>
-                  <Typography sx={{ fontSize: 12, color: "gray", textAlign: "right" }}>{new Date(r.date).toLocaleDateString()}</Typography>
+      {/* === ВЕРХНИЙ БЛОК === */}
+      <Paper elevation={3} sx={{ p: 0, borderRadius: 4, mb: 4, overflow: 'hidden' }}>
+        <Grid container>
+            
+            {/* 1. ЛЕВАЯ ЧАСТЬ: Аватар + Инфо */}
+            <Grid item xs={12} md={4} sx={{ 
+                borderRight: { md: '1px solid #eee' }, 
+                bgcolor: '#fafafa',
+                p: 4,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center'
+            }}>
+                <Box sx={{ position: 'relative', display: 'inline-block', mb: 2 }}>
+                  <Badge
+                    overlap="circular"
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    badgeContent={
+                      isMyProfile && (
+                        <IconButton 
+                            component="label" 
+                            sx={{ bgcolor: '#1976d2', color: 'white', width: 36, height: 36, '&:hover': { bgcolor: '#115293' } }}
+                        >
+                          <PhotoCamera fontSize="small" />
+                          <input type="file" hidden onChange={handleAvatarChange} />
+                        </IconButton>
+                      )
+                    }
+                  >
+                    <Avatar 
+                        src={avatar || defaultAvatar} 
+                        sx={{ width: 140, height: 140, border: "6px solid white", boxShadow: "0 4px 15px rgba(0,0,0,0.1)" }} 
+                    />
+                  </Badge>
                 </Box>
-              ))
-          )}
-        </Box>
-      </Box>
+                
+                <Typography variant="h4" fontWeight="bold" align="center" color="#333">{name}</Typography>
+                <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 3 }}>{email}</Typography>
+                
+                <Divider flexItem sx={{ mb: 3 }} />
+
+                <Box sx={{ width: '100%' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, justifyContent: 'center' }}>
+                        <InfoIcon color="action" fontSize="small" />
+                        <Typography variant="subtitle1" fontWeight="bold" color="text.secondary">О себе</Typography>
+                    </Box>
+                    <Typography variant="body2" align="center" sx={{ fontStyle: bio ? 'normal' : 'italic', color: bio ? 'text.primary' : 'text.disabled', lineHeight: 1.6 }}>
+                        {bio || "Биография не заполнена."}
+                    </Typography>
+                </Box>
+            </Grid>
+
+            {/* 2. ПРАВАЯ ЧАСТЬ: Статистика */}
+            <Grid item xs={12} md={8} sx={{ p: 5, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <Typography variant="h5" fontWeight="bold" sx={{ mb: 4, color: '#444' }}>Статистика активности</Typography>
+                <Grid container spacing={3}>
+                    <Grid item xs={12} sm={4}>
+                        <Box sx={{ bgcolor: 'white', p: 3, borderRadius: 3, boxShadow: "0 4px 12px rgba(0,0,0,0.05)", border: '1px solid #e3f2fd', textAlign: 'center', height: '100%' }}>
+                            <ShoppingBagIcon sx={{ fontSize: 36, color: '#1976d2', mb: 1 }} />
+                            <Typography variant="h3" fontWeight="bold" color="primary">0</Typography>
+                            <Typography variant="body2" color="text.secondary" mt={1}>Заказов</Typography>
+                        </Box>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                            <Box sx={{ bgcolor: 'white', p: 3, borderRadius: 3, boxShadow: "0 4px 12px rgba(0,0,0,0.05)", border: '1px solid #e8f5e9', textAlign: 'center', height: '100%' }}>
+                            <LocalOfferIcon sx={{ fontSize: 36, color: '#2e7d32', mb: 1 }} />
+                            <Typography variant="h3" fontWeight="bold" sx={{ color: '#2e7d32' }}>0%</Typography>
+                            <Typography variant="body2" color="text.secondary" mt={1}>Скидка</Typography>
+                        </Box>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                            <Box sx={{ bgcolor: 'white', p: 3, borderRadius: 3, boxShadow: "0 4px 12px rgba(0,0,0,0.05)", border: '1px solid #fff3e0', textAlign: 'center', height: '100%' }}>
+                            <CalendarMonthIcon sx={{ fontSize: 36, color: '#ef6c00', mb: 1 }} />
+                            <Typography variant="h4" fontWeight="bold" sx={{ color: '#ef6c00', mt: 1 }}>
+                              {profileUser.createdAt ? new Date(profileUser.createdAt).getFullYear() : "2022"}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" mt={1}>Регистрация</Typography>
+                        </Box>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+      </Paper>
+
+      {/* === НИЖНЯЯ ЧАСТЬ === */}
+      <Grid container spacing={4}>
+        
+        {/* Форма редактирования */}
+        {isMyProfile && (
+            <Grid item xs={12}>
+                <Paper elevation={3} sx={{ p: 4, borderRadius: 4 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                        <EditIcon color="primary" />
+                        <Typography variant="h6" fontWeight="bold">Редактировать профиль</Typography>
+                    </Box>
+                    
+                    <Grid container spacing={3}>
+                        <Grid item xs={12} sm={6}>
+                            <TextField 
+                                label="Имя" fullWidth value={name} onChange={e => setName(e.target.value)} 
+                                InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon fontSize="small" color="action" /></InputAdornment> }}
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <TextField 
+                                label="Email" fullWidth value={email} onChange={e => setEmail(e.target.value)}
+                                InputProps={{ startAdornment: <InputAdornment position="start"><EmailIcon fontSize="small" color="action" /></InputAdornment> }} 
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <TextField 
+                                label="Биография (обновится слева)" multiline rows={3} fullWidth placeholder="Напишите о себе..."
+                                value={bio} onChange={e => setBio(e.target.value)} 
+                            />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Button variant="contained" size="large" startIcon={<SaveIcon />} onClick={handleSave} sx={{ borderRadius: 2, fontWeight: 'bold', px: 4 }}>
+                                Сохранить изменения
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </Paper>
+            </Grid>
+        )}
+
+        {/* ОТЗЫВЫ - ТЕПЕРЬ ШИРОКИЕ И В СЕТКЕ */}
+        <Grid item xs={12}>
+            <Paper elevation={3} sx={{ p: 4, borderRadius: 4 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <ArticleIcon color="primary" />
+                        <Typography variant="h6" fontWeight="bold">Отзывы</Typography>
+                        <Box sx={{ bgcolor: '#e3f2fd', color: '#1976d2', px: 1.5, py: 0.5, borderRadius: 2, fontSize: '0.8rem', fontWeight: 'bold' }}>
+                            {allReviews.length}
+                        </Box>
+                    </Box>
+                </Box>
+
+                {allReviews.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 5, bgcolor: '#f9f9f9', borderRadius: 4, border: '1px dashed #ddd' }}>
+                    <HistoryIcon sx={{ fontSize: 50, color: '#ccc', mb: 1 }} />
+                    <Typography color="text.secondary" fontSize={16}>Вы еще не оставляли отзывов</Typography>
+                </Box>
+                ) : (
+                // 🔥 ТУТ ИЗМЕНЕНИЯ: GRID CONTAINER ВМЕСТО STACK
+                <Grid container spacing={3}>
+                    {allReviews.map(r => (
+                    // Каждый отзыв занимает половину ширины на большом экране (md={6})
+                    // Это визуально расширяет контент
+                    <Grid item xs={12} md={6} key={r.id}>
+                        <Card sx={{ 
+                            height: '100%', 
+                            borderRadius: 3, 
+                            boxShadow: "0 2px 10px rgba(0,0,0,0.05)", 
+                            border: '1px solid #eee',
+                            transition: '0.3s',
+                            '&:hover': { transform: 'translateY(-2px)', boxShadow: "0 5px 20px rgba(0,0,0,0.1)", borderColor: '#1976d2' }
+                        }}>
+                            <CardContent>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                        <Avatar sx={{ width: 30, height: 30, bgcolor: '#1976d2', fontSize: 14 }}>
+                                            {r.nickname ? r.nickname[0].toUpperCase() : "U"}
+                                        </Avatar>
+                                        <Typography fontWeight="bold">{r.nickname}</Typography>
+                                    </Box>
+                                    <Typography variant="caption" color="text.secondary">
+                                        {r.date ? new Date(r.date).toLocaleDateString() : ""}
+                                    </Typography>
+                                </Box>
+                                
+                                <Rating value={Number(r.rating) || 0} readOnly size="small" sx={{ mb: 2 }} />
+                                
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <FormatQuoteIcon sx={{ color: '#e0e0e0', transform: 'rotate(180deg)' }} />
+                                    <Typography variant="body2" sx={{ lineHeight: 1.6, fontStyle: 'italic', color: '#555' }}>
+                                        {r.text}
+                                    </Typography>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                    ))}
+                </Grid>
+                )}
+            </Paper>
+        </Grid>
+      </Grid>
     </Box>
   );
 }

@@ -1,40 +1,40 @@
 import { createContext, useContext, useState } from "react";
+import { Snackbar, Alert } from "@mui/material"
 
 export const NotificationContext = createContext();
 
-export function NotificationProvider({ children }) {
-  const [messages, setMessages] = useState([]);
+export const useNotification = () => useContext(NotificationContext);
 
-  const showNotification = (text, duration = 3000) => {
-    const id = Date.now();
-    setMessages(prev => [...prev, { id, text }]);
-    setTimeout(() => {
-      setMessages(prev => prev.filter(m => m.id !== id));
-    }, duration);
+export function NotificationProvider({ children }) {
+  const [messages, setMessages] = useState("");
+  const [open, setOpen] = useState(false);
+  const [severity, setSeverity] = useState("success");
+
+
+  const showNotification = (msg, type="success") => {
+    setMessages(msg);
+    setSeverity(type);
+    setOpen(true);
   };
 
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') return;
+    setOpen(false);
+  }
+
   return (
-    <NotificationContext.Provider value={{ messages, showNotification }}>
+    <NotificationContext.Provider value={{ showNotification }}>
       {children}
+      <Snackbar 
+      open={open}
+      autoHideDuration={3000}
+      onClose={handleClose}
+      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
+        <Alert onClose={handleClose} severity={severity} sx={{ width: "100%" }} variant="filled">
+          {messages}
+        </Alert>
+      </Snackbar>
     </NotificationContext.Provider>
   );
 }
 
-// хук для удобного доступа к контексту
-export function useNotification() {
-  return useContext(NotificationContext);
-}
-
-// компонент для отображения уведомлений
-export function NotificationContainer() {
-  const { messages } = useNotification();
-  return (
-    <div style={{ position: "fixed", top: 10, right: 10, zIndex: 1000 }}>
-      {messages.map(m => (
-        <div key={m.id} style={{ background: "#1976d2", color: "white", padding: "10px 20px", borderRadius: 4, marginBottom: 8 }}>
-          {m.text}
-        </div>
-      ))}
-    </div>
-  );
-}

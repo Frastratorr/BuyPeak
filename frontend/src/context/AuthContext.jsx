@@ -18,6 +18,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("auth_user");
+    window.location.href = "/"
   };
 
   const updateUser = (updateData) => {
