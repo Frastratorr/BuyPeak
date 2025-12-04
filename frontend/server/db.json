@@ -256,6 +256,13 @@
     },
     {
       "userId": "1764617944471",
+      "items": []
+    }
+  ],
+  "orders": [
+    {
+      "id": 1764870925933,
+      "userId": 1764617944471,
       "items": [
         {
           "id": 1,
@@ -275,7 +282,63 @@
           "fulldescription": "Полное описание 2",
           "quantity": 4
         }
-      ]
+      ],
+      "total": 1000,
+      "shippingInfo": {
+        "address": "Хуйжопинск, хуй123",
+        "phone": "+1 456912321",
+        "name": "Пидор Пидорович Хуев"
+      },
+      "date": 1764870925881,
+      "status": "processing"
+    },
+    {
+      "id": 1764872499406,
+      "userId": 1764617944471,
+      "items": [
+        {
+          "id": 1,
+          "name": "Товар 1",
+          "image": "/src/assets/img/products/product1.jpg",
+          "price": 100,
+          "description": "Описание 1",
+          "fulldescription": "Полное описание 1",
+          "quantity": 4
+        }
+      ],
+      "total": 400,
+      "shippingInfo": {
+        "country": "Чечня",
+        "address": "Котакжемеycr, 123",
+        "phone": "+380 123123123",
+        "name": "admin"
+      },
+      "date": 1764872499385,
+      "status": "processing"
+    },
+    {
+      "id": 1764872542520,
+      "userId": 1764617944471,
+      "items": [
+        {
+          "id": 1,
+          "name": "Товар 1",
+          "image": "/src/assets/img/products/product1.jpg",
+          "price": 100,
+          "description": "Описание 1",
+          "fulldescription": "Полное описание 1",
+          "quantity": 5
+        }
+      ],
+      "total": 500,
+      "shippingInfo": {
+        "country": "писька",
+        "address": "1488, ашулашпуоша",
+        "phone": "+380 111111111111",
+        "name": "admin"
+      },
+      "date": 1764872542457,
+      "status": "processing"
     }
   ]
 }

@@ -6,7 +6,7 @@ import {
   Typography, 
   IconButton, 
   Button, 
-  Grid, // Используем обычный Grid
+  Grid,
   Paper, 
   Divider, 
   Stack,
@@ -25,7 +25,6 @@ export default function CartPage() {
   const { cart, removeFromCart, clearCart, updateQuantity } = useContext(CartContext);
   const navigate = useNavigate();
 
-  // --- БЕЗОПАСНЫЙ РАСЧЕТ ЦЕНЫ ---
   const total = cart.reduce((sum, item) => {
     if (!item.price) return sum;
     const priceStr = String(item.price).replace(/[^0-9.]/g, '');
@@ -36,7 +35,6 @@ export default function CartPage() {
   const deliveryCost = total > 100 ? 0 : 10; 
   const finalPrice = total + deliveryCost;
 
-  // --- 1. ПУСТАЯ КОРЗИНА ---
   if (cart.length === 0) {
     return (
       <Box 
@@ -72,21 +70,13 @@ export default function CartPage() {
     );
   }
 
-  // --- 2. ОСНОВНОЙ ИНТЕРФЕЙС ---
   return (
-    // maxWidth="xl" делает контейнер шире (почти на весь экран)
     <Box sx={{ maxWidth: "xl", margin: "0 auto", p: { xs: 2, md: 4 } }}>
       <Typography variant="h4" fontWeight="bold" sx={{ mb: 4 }}>
         Корзина ({cart.reduce((acc, item) => acc + item.quantity, 0)})
       </Typography>
 
       <Grid container spacing={4}>
-        
-        {/* 
-            ЛЕВАЯ КОЛОНКА
-            Используем size={{ ... }} вместо xs={12}. 
-            Это новый синтаксис MUI v6, который убирает ошибку "item prop removed".
-        */}
         <Grid size={{ xs: 12, md: 8 }}>
           <Stack spacing={2}>
             {cart.map((item) => {
@@ -98,16 +88,15 @@ export default function CartPage() {
                   key={item.id} 
                   sx={{ 
                     display: "flex", 
-                    p: 3, // Увеличили внутренний отступ для "широты"
+                    p: 3, 
                     borderRadius: 3, 
                     boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
-                    width: "95%", // Гарантируем полную ширину
+                    width: "95%", 
                     alignItems: "center"
                   }}
                 >
                   <CardMedia
                     component="img"
-                    // Увеличили картинку до 120px
                     sx={{ width: 120, height: 120, borderRadius: 2, objectFit: "cover" }}
                     image={item.img || item.image || "https://placehold.co/120"}
                     alt={item.name}
@@ -129,7 +118,6 @@ export default function CartPage() {
                     </Box>
 
                     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: "auto" }}>
-                      {/* Управление количеством */}
                       <Box 
                         sx={{ 
                           display: "flex", 
@@ -180,12 +168,11 @@ export default function CartPage() {
           </Button>
         </Grid>
 
-        {/* ПРАВАЯ КОЛОНКА */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Paper 
             elevation={3} 
             sx={{ 
-              p: 4, // Больше отступов
+              p: 4,
               borderRadius: 4, 
               position: "sticky", 
               top: 100 
@@ -228,13 +215,14 @@ export default function CartPage() {
             </Box>
 
             <Button 
+              component={Link}
+              to="/checkout"
               variant="contained" 
               fullWidth 
               size="large" 
               sx={{ borderRadius: "12px", height: "55px", fontSize: "18px", fontWeight: "bold" }}
-              onClick={() => alert("Переход к оплате...")}
             >
-              Оплатить
+              Перейти к оформлению
             </Button>
           </Paper>
         </Grid>

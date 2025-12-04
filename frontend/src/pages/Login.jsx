@@ -23,7 +23,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false); // Добавил состояние загрузки
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -55,11 +55,11 @@ export default function Login() {
   return (
     <Box 
       sx={{ 
-        minHeight: "80vh", // На весь экран минус хедер
+        minHeight: "80vh",
         display: "flex", 
         alignItems: "center", 
         justifyContent: "center",
-        background: "linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%)" // Легкий фон
+        background: "linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%)"
       }}
     >
       <Paper 
@@ -74,7 +74,6 @@ export default function Login() {
           alignItems: "center" 
         }}
       >
-        {/* Иконка замка сверху */}
         <Avatar sx={{ m: 1, bgcolor: "secondary.main", width: 56, height: 56 }}>
           <LockOutlinedIcon fontSize="large" />
         </Avatar>

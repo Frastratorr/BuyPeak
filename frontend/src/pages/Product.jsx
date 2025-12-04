@@ -41,16 +41,13 @@ export default function Product() {
   const [newReview, setNewReview] = useState("");
   const [newRating, setNewRating] = useState(0);
 
-  // Безопасное получение продукта и цены
   const product = productsData.find(p => p.id === Number(id));
   
-  // Логика цены (если она строка или число)
   const priceDisplay = product ? product.price : "0";
   const priceValue = product 
     ? Number(String(product.price).replace(/[^0-9.]/g, '')) 
     : 0;
 
-  // Загрузка отзывов
   useEffect(() => {
     if (!product) return;
     fetch(`http://localhost:5000/reviews/product/${product.id}`)
@@ -118,9 +115,7 @@ export default function Product() {
       
       <Box sx={{ display: "flex", gap: 5, flexWrap: "wrap", alignItems: "flex-start" }}>
         
-        {/* === ЛЕВАЯ ЧАСТЬ: КАРТИНКА И ОТЗЫВЫ === */}
         <Box sx={{ flex: "1 1 400px", minWidth: 300 }}>
-          {/* Картинка в Paper с тенью */}
           <Paper elevation={3} sx={{ borderRadius: 4, overflow: 'hidden', mb: 3 }}>
             <CardMedia
               component="img"
@@ -136,7 +131,6 @@ export default function Product() {
             />
           </Paper>
 
-          {/* Рейтинг */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 4 }}>
             <Rating value={averageRating} readOnly size="large" precision={0.5} />
             <Typography variant="h6" fontWeight="bold">
@@ -149,7 +143,6 @@ export default function Product() {
 
           <Divider sx={{ mb: 4 }} />
 
-          {/* Блок списка отзывов */}
           <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>Отзывы покупателей</Typography>
           <ReviewsBlock
             reviews={reviews}
@@ -158,16 +151,13 @@ export default function Product() {
           />
         </Box>
 
-        {/* === ПРАВАЯ ЧАСТЬ: ИНФО И ПОКУПКА === */}
         <Box sx={{ flex: "1 1 400px", display: "flex", flexDirection: "column", gap: 3 }}>
           
-          {/* Заголовок и цена */}
           <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <Typography variant="h3" sx={{ fontWeight: 800, color: '#1a2027', lineHeight: 1.2 }}>
                     {product.name}
                 </Typography>
-                {/* Бейдж "В наличии" */}
                 <Chip label="В наличии" color="success" size="small" variant="outlined" sx={{ fontWeight: 'bold' }} />
             </Box>
             
@@ -183,12 +173,10 @@ export default function Product() {
 
           <Divider />
 
-          {/* Управление количеством и кнопка купить */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography variant="subtitle1" fontWeight="bold">Количество:</Typography>
             
             <Box sx={{ display: "flex", gap: 2, flexWrap: 'wrap' }}>
-                {/* Капсула количества */}
                 <Box sx={{ 
                     display: "flex", alignItems: "center", 
                     border: '1px solid #e0e0e0', borderRadius: '50px', 
@@ -212,7 +200,6 @@ export default function Product() {
                     </IconButton>
                 </Box>
 
-                {/* Кнопка Купить */}
                 <Button 
                     variant="contained" 
                     size="large" 
@@ -232,7 +219,6 @@ export default function Product() {
             </Box>
           </Box>
 
-          {/* Описание товара */}
           <Paper elevation={0} sx={{ bgcolor: '#f5f9ff', p: 3, borderRadius: 3, mt: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                 <DescriptionIcon color="primary" />
@@ -243,7 +229,6 @@ export default function Product() {
             </Typography>
           </Paper>
 
-          {/* Форма добавления отзыва */}
           <Paper elevation={3} sx={{ p: 3, borderRadius: 3, mt: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <RateReviewIcon color="primary" />

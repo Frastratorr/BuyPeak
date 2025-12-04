@@ -5,27 +5,23 @@ import { useNotification } from "../context/NotificationContext";
 export const CartContext = createContext();
 
 export function CartProvider({ children }) {
-    const { user } = useContext(AuthContext); // Достаем текущего юзера
+    const { user } = useContext(AuthContext);
     const [cart, setCart] = useState([]);
     const { showNotification } = useNotification(); 
 
-    // 1. Загрузка корзины при смене пользователя (Вход / Выход)
     useEffect(() => {
         if (user) {
-            // Если пользователь залогинен — грузим с сервера
             fetch(`http://localhost:5000/cart/${user.id}`)
                 .then(res => res.json())
                 .then(data => setCart(data))
                 .catch(err => console.error("Ошибка загрузки корзины:", err));
         } else {
-            // Если пользователь вышел — очищаем корзину
             setCart([]);
         }
     }, [user]);
 
-    // Вспомогательная функция для сохранения на сервере
     const saveToServer = (newCartItems) => {
-        if (!user) return; // Если не залогинен, на сервер не шлем (или можно сохранять в LocalStorage для гостя)
+        if (!user) return;
 
         fetch(`http://localhost:5000/cart/${user.id}`, {
             method: "POST",
@@ -34,7 +30,6 @@ export function CartProvider({ children }) {
         }).catch(err => console.error("Ошибка сохранения корзины:", err));
     };
 
-    // 2. Добавление товара
     const addToCart = (product) => {
         setCart((prev) => {
             const existing = prev.find((item) => item.id === product.id);
@@ -49,14 +44,12 @@ export function CartProvider({ children }) {
                 newCart = [...prev, { ...product, quantity: product.quantity || 1}];
             }
             
-            // Сразу сохраняем новую версию на сервер
             saveToServer(newCart);
             showNotification(`Товар "${product.title}" добавлен в корзину!`, "success");
             return newCart;
         });
     };
 
-    // 3. Обновление количества
     const updateQuantity = (id, qty) => {
         setCart((prev) => {
             const newCart = prev.map((item) =>
@@ -67,7 +60,6 @@ export function CartProvider({ children }) {
         });
     }
 
-    // 4. Удаление товара
     const removeFromCart = (id) => {
         setCart((prev) => {
             const newCart = prev.filter((item) => item.id !== id);
@@ -77,7 +69,6 @@ export function CartProvider({ children }) {
         });
     };
 
-    // 5. Полная очистка (например после покупки)
     const clearCart = () => {
         setCart([]);
         saveToServer([]);

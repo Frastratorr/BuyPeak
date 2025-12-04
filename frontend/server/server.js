@@ -10,23 +10,20 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 5000;
 
-// ТЕПЕРЬ ИСПОЛЬЗУЕМ ОДИН ФАЙЛ db.json
 const dbFile = path.join(__dirname, "db.json");
 
-// Создаём файл с начальной структурой, если его нет
 if (!fs.existsSync(dbFile)) {
-  fs.writeFileSync(dbFile, JSON.stringify({ users: [], reviews: [], cart: [] }, null, 2));
+  fs.writeFileSync(dbFile, JSON.stringify({ users: [], reviews: [], cart: [], orders: [] }, null, 2));
 }
 
 app.use(cors());
 app.use(express.json());
 
-// --- Вспомогательные функции для чтения/записи БД ---
 const getDb = () => {
   try {
     return JSON.parse(fs.readFileSync(dbFile));
   } catch (e) {
-    return { users: [], reviews: [], cart: [] };
+    return { users: [], reviews: [], cart: [], orders: [] };
   }
 };
 
@@ -34,18 +31,13 @@ const saveDb = (data) => {
   fs.writeFileSync(dbFile, JSON.stringify(data, null, 2));
 };
 
-// ================= ПОЛЬЗОВАТЕЛИ =================
-
-// Получить всех пользователей
 app.get("/users", (req, res) => {
   const db = getDb();
   res.json(db.users);
 });
 
-// Получить ОДНОГО пользователя по ID (ЭТОГО НЕ БЫЛО, НО ЭТО НУЖНО ДЛЯ PROFILE.JSX)
 app.get("/users/:id", (req, res) => {
   const db = getDb();
-  // Ищем пользователя (сравниваем как строки, чтобы избежать проблем типов)
   const user = db.users.find(u => String(u.id) === String(req.params.id));
   
   if (!user) {
@@ -54,7 +46,6 @@ app.get("/users/:id", (req, res) => {
   res.json(user);
 });
 
-// Регистрация
 app.post("/users", (req, res) => {
   const { name, email, password } = req.body;
   const db = getDb();
@@ -79,7 +70,6 @@ app.post("/users", (req, res) => {
   res.json(newUser);
 });
 
-// Логин
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
   const db = getDb();
@@ -92,7 +82,6 @@ app.post("/login", (req, res) => {
   res.json(foundUser);
 });
 
-// Обновление профиля
 app.put("/users/:id", (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
@@ -102,7 +91,6 @@ app.put("/users/:id", (req, res) => {
     
     if (index === -1) return res.status(404).json({error: "Пользователь не найден"});
 
-    // Обновляем данные, сохраняя ID
     const updatedUser = {...db.users[index], ...updateData, id: db.users[index].id };
     db.users[index] = updatedUser;
     
@@ -111,15 +99,11 @@ app.put("/users/:id", (req, res) => {
     res.json(updatedUser);
 });
 
-// ================= ОТЗЫВЫ =================
-
-// Получить все отзывы
 app.get("/reviews", (req, res) => {
   const db = getDb();
   res.json(db.reviews);
 });
 
-// Получить отзывы для конкретного товара
 app.get("/reviews/product/:id", (req, res) => {
   try {
     const db = getDb();
@@ -131,7 +115,6 @@ app.get("/reviews/product/:id", (req, res) => {
   }
 });
 
-// Добавить отзыв
 app.post("/reviews", (req, res) => {
   try {
     const db = getDb();
@@ -147,32 +130,62 @@ app.post("/reviews", (req, res) => {
 
 app.get("/cart/:userId", (req, res) => {
   const db = getDb();
-  // Ищем запись, приводим ID к строке для надежности
   const userCartEntry = db.carts.find(c => String(c.userId) === String(req.params.userId));
   
-  // Если нашли - отдаем товары, если нет - пустой массив
   res.json(userCartEntry ? userCartEntry.items : []);
 });
 
-// Обновить/Сохранить корзину (POST)
 app.post("/cart/:userId", (req, res) => {
   const { userId } = req.params;
   const { items } = req.body; 
 
   const db = getDb();
-  // Ищем индекс корзины
   const cartIndex = db.carts.findIndex(c => String(c.userId) === String(userId));
 
   if (cartIndex !== -1) {
-    // Обновляем существующую
     db.carts[cartIndex].items = items;
   } else {
-    // Создаем новую
     db.carts.push({ userId, items });
   }
 
   saveDb(db);
   res.json({ success: true, items });
+});
+
+app.get("/orders/:userId", (req, res) => {
+  const db = getDb();
+  const orders = db.orders || [];
+  const userOrders = orders.filter(o => String(o.userId) === String(req.params.userId));
+  res.json(userOrders);
+});
+
+app.post("/orders", (req, res) => {
+  const db = getDb();
+  const { userId, items, total, shippingInfo, date } = req.body;
+
+  if (!db.orders) {
+      db.orders = [];
+  }
+
+  const newOrder = {
+    id: Date.now(),
+    userId,
+    items,
+    total,
+    shippingInfo,
+    date: date || Date.now(),
+    status: "processing"
+  };
+
+  db.orders.push(newOrder);
+  
+  const cartIndex = db.carts.findIndex(c => String(c.userId) === String(userId));
+  if (cartIndex !== -1) {
+    db.carts[cartIndex].items = [];
+  }
+
+  saveDb(db);
+  res.json(newOrder);
 });
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

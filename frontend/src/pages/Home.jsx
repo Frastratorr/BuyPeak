@@ -38,26 +38,23 @@ export default function Home() {
     { text: 'Бонусная система', icon: <CardGiftcardIcon sx={{ fontSize: 40, color: '#1976d2' }} /> },
   ];
 
-  // 🔥 ОБНОВЛЕННЫЕ СТИЛИ ДЛЯ МАЛЕНЬКИХ АККУРАТНЫХ СТРЕЛОК
   const swiperStyles = {
     '& .swiper-button-next, & .swiper-button-prev': {
       backgroundColor: 'white',
-      width: '32px',  // Уменьшили размер круга
-      height: '32px', // Уменьшили размер круга
-      borderRadius: '50%', // Идеальный круг
-      boxShadow: '0 2px 8px rgba(0,0,0,0.15)', // Аккуратная тень
+      width: '32px',
+      height: '32px',
+      borderRadius: '50%',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
       color: '#1976d2',
       
-      // Магия центровки (Flexbox)
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       
       transition: 'all 0.3s ease',
       
-      // Стили самой "галочки"
       '&::after': {
-        fontSize: '12px', // Сделали галочку меньше и тоньше
+        fontSize: '12px',
         fontWeight: 'bold',
       },
       
@@ -68,7 +65,6 @@ export default function Home() {
         boxShadow: '0 4px 12px rgba(25, 118, 210, 0.4)',
       }
     },
-    // Скрываем стрелки, если слайдов мало и листать некуда
     '& .swiper-button-disabled': {
         opacity: 0,
         pointerEvents: 'none'
@@ -78,7 +74,6 @@ export default function Home() {
   return (
     <Box sx={{ padding: '20px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'Roboto, sans-serif' }}>
 
-      {/* --- Блок 1: Приветствие --- */}
       <Box sx={{ display: "flex", flexDirection: { xs: 'column', md: 'row' }, gap: 3, width: "100%", mb: 5 }}>
         <Box
           sx={{
@@ -125,7 +120,6 @@ export default function Home() {
         </Box>
       </Box>
 
-      {/* --- Блок 2: Услуги --- */}
       <Box sx={{ mb: 6, padding: '30px', borderRadius: '16px', background: '#f5f9ff', display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}>
         <Box sx={{ flex: '0 0 35%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 2, color: '#333' }}>О нас</Typography>
@@ -157,7 +151,6 @@ export default function Home() {
         </Box>
       </Box>
 
-      {/* --- Блок 3: Новости --- */}
       <Box sx={{ mb: 6 }}>
         <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 3 }}>Новости</Typography>
         
@@ -186,7 +179,6 @@ export default function Home() {
         </Box>
       </Box>
 
-      {/* --- Блок 4: Акции --- */}
       <Box>
         <Typography variant="h4" sx={{ textAlign: 'center', fontWeight: 'bold', mb: 1 }}>Горячие предложения 🔥</Typography>
         

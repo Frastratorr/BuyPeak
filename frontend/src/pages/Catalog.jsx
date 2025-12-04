@@ -12,7 +12,6 @@ import {
 } from "@mui/material";
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-// 👇 ИМПОРТ ДОЛЛАРА
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import InventoryIcon from '@mui/icons-material/Inventory';
 
@@ -33,7 +32,6 @@ export default function Catalog() {
   return (
     <Box sx={{ display: "flex", p: 4, gap: 4, maxWidth: "1400px", mx: "auto", minHeight: "100vh", bgcolor: "#f9f9f9", alignItems: "flex-start" }}>
 
-      {/* ---------- ЛЕВАЯ ЧАСТЬ (ТОВАРЫ - СПИСОК) ---------- */}
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography variant="h4" sx={{ mb: 3, fontWeight: "bold", color: "#333" }}>
           Каталог товаров
@@ -55,7 +53,6 @@ export default function Catalog() {
         )}
       </Box>
 
-      {/* ---------- ПРАВАЯ ЧАСТЬ (ФИЛЬТРЫ - САЙДБАР) ---------- */}
       <Box sx={{ width: "300px", flexShrink: 0 }}>
         <Paper
           elevation={3}
@@ -75,10 +72,8 @@ export default function Catalog() {
           <Divider sx={{ mb: 3 }} />
 
           <Stack spacing={3}>
-            {/* Цена */}
             <Box>
               <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                {/* 👇 ИСПОЛЬЗОВАНИЕ ИКОНКИ ДОЛЛАРА */}
                 <AttachMoneyIcon fontSize="small" color="action" /> Цена
               </Typography>
               <Box sx={{ display: "flex", gap: 1 }}>
@@ -101,7 +96,6 @@ export default function Catalog() {
               </Box>
             </Box>
 
-            {/* Количество */}
             <Box>
               <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <InventoryIcon fontSize="small" color="action" /> Наличие
@@ -126,7 +120,6 @@ export default function Catalog() {
               </Box>
             </Box>
 
-            {/* Кнопка сброса */}
             <Button
               variant="contained"
               color="primary"

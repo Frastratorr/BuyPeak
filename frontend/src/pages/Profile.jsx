@@ -21,8 +21,6 @@ import {
 } from "@mui/material";
 import defaultAvatar from "../assets/img/default-avatar.jpg";
 import { useNotification } from "../context/NotificationContext";
-
-// Иконки
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import SaveIcon from '@mui/icons-material/Save';
 import PersonIcon from '@mui/icons-material/Person';
@@ -146,11 +144,9 @@ export default function Profile() {
         </Typography>
       </Box>
 
-      {/* === ВЕРХНИЙ БЛОК === */}
       <Paper elevation={3} sx={{ p: 0, borderRadius: 4, mb: 4, overflow: 'hidden' }}>
         <Grid container>
             
-            {/* 1. ЛЕВАЯ ЧАСТЬ: Аватар + Инфо */}
             <Grid item xs={12} md={4} sx={{ 
                 borderRight: { md: '1px solid #eee' }, 
                 bgcolor: '#fafafa',
@@ -198,7 +194,6 @@ export default function Profile() {
                 </Box>
             </Grid>
 
-            {/* 2. ПРАВАЯ ЧАСТЬ: Статистика */}
             <Grid item xs={12} md={8} sx={{ p: 5, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <Typography variant="h5" fontWeight="bold" sx={{ mb: 4, color: '#444' }}>Статистика активности</Typography>
                 <Grid container spacing={3}>
@@ -230,10 +225,8 @@ export default function Profile() {
         </Grid>
       </Paper>
 
-      {/* === НИЖНЯЯ ЧАСТЬ === */}
       <Grid container spacing={4}>
         
-        {/* Форма редактирования */}
         {isMyProfile && (
             <Grid item xs={12}>
                 <Paper elevation={3} sx={{ p: 4, borderRadius: 4 }}>
@@ -271,7 +264,6 @@ export default function Profile() {
             </Grid>
         )}
 
-        {/* ОТЗЫВЫ - ТЕПЕРЬ ШИРОКИЕ И В СЕТКЕ */}
         <Grid item xs={12}>
             <Paper elevation={3} sx={{ p: 4, borderRadius: 4 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
@@ -290,11 +282,8 @@ export default function Profile() {
                     <Typography color="text.secondary" fontSize={16}>Вы еще не оставляли отзывов</Typography>
                 </Box>
                 ) : (
-                // 🔥 ТУТ ИЗМЕНЕНИЯ: GRID CONTAINER ВМЕСТО STACK
                 <Grid container spacing={3}>
                     {allReviews.map(r => (
-                    // Каждый отзыв занимает половину ширины на большом экране (md={6})
-                    // Это визуально расширяет контент
                     <Grid item xs={12} md={6} key={r.id}>
                         <Card sx={{ 
                             height: '100%', 
