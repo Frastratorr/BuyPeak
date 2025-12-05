@@ -12,7 +12,7 @@ import {
   Chip, 
   Divider, 
   Stack,
-  InputAdornment
+  CircularProgress
 } from "@mui/material";
 import { 
   Add, 
@@ -21,14 +21,14 @@ import {
   Send as SendIcon, 
   LocalOffer, 
   Description as DescriptionIcon,
-  RateReview as RateReviewIcon
+  RateReview as RateReviewIcon,
+  Block as BlockIcon
 } from "@mui/icons-material";
 import { CartContext } from "../context/CartContext";
 import { AuthContext } from "../context/AuthContext";
 import { useNotification } from "../context/NotificationContext";
 import ReviewsBlock from "../components/ReviewsBlock";
 import defaultAvatar from "../assets/img/default-avatar.jpg";
-import { productsData } from "../data/products";
 
 export default function Product() {
   const { id } = useParams();
@@ -36,31 +36,42 @@ export default function Product() {
   const { user } = useContext(AuthContext);
   const { showNotification } = useNotification();
 
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState("");
   const [newRating, setNewRating] = useState(0);
 
-  const product = productsData.find(p => p.id === Number(id));
-  
-  const priceDisplay = product ? product.price : "0";
-  const priceValue = product 
-    ? Number(String(product.price).replace(/[^0-9.]/g, '')) 
-    : 0;
+  useEffect(() => {
+    fetch("http://localhost:5000/products")
+      .then(res => res.json())
+      .then(data => {
+        const found = data.find(p => String(p.id) === String(id));
+        setProduct(found);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [id]);
 
   useEffect(() => {
     if (!product) return;
     fetch(`http://localhost:5000/reviews/product/${product.id}`)
       .then(res => res.json())
       .then(data => setReviews(data))
-      .catch(err => console.error("Failed to load reviews:", err));
+      .catch(console.error);
   }, [product]);
+
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
 
   if (!product) return (
     <Box sx={{ p: 5, textAlign: 'center' }}>
       <Typography variant="h4" color="error">Товар не найден</Typography>
     </Box>
   );
+
+  const isOutOfStock = !product.quantity || product.quantity <= 0;
+  const maxQuantity = product.quantity || 0;
 
   const handleAddReview = async () => {
     if (!newReview.trim()) return showNotification("Введите текст отзыва!", "warning");
@@ -93,16 +104,15 @@ export default function Product() {
     }
   };
 
-  const handleAdd = () => setQuantity(prev => prev + 1);
+  const handleAdd = () => {
+      if (quantity < maxQuantity) setQuantity(prev => prev + 1);
+  };
+  
   const handleRemove = () => setQuantity(prev => Math.max(1, prev - 1));
 
   const handleBuy = () => {
+    if (isOutOfStock) return;
     addToCart({ ...product, quantity });
-    const history = JSON.parse(localStorage.getItem("purchase_history") || "[]");
-    localStorage.setItem(
-      "purchase_history",
-      JSON.stringify([...history, { ...product, quantity, date: Date.now(), userId: user?.id || "guest" }])
-    );
     showNotification(`Добавлено ${quantity} шт. "${product.name}" в корзину!`, "success");
   };
 
@@ -124,9 +134,13 @@ export default function Product() {
               sx={{ 
                 width: "100%", 
                 maxHeight: 500, 
-                objectFit: "cover",
+                objectFit: "contain",
+                p: 2,
+                bgcolor: "white",
                 transition: "transform 0.3s",
-                '&:hover': { transform: "scale(1.02)" }
+                '&:hover': { transform: "scale(1.02)" },
+                filter: isOutOfStock ? "grayscale(100%)" : "none",
+                opacity: isOutOfStock ? 0.7 : 1
               }}
             />
           </Paper>
@@ -158,44 +172,57 @@ export default function Product() {
                 <Typography variant="h3" sx={{ fontWeight: 800, color: '#1a2027', lineHeight: 1.2 }}>
                     {product.name}
                 </Typography>
-                <Chip label="В наличии" color="success" size="small" variant="outlined" sx={{ fontWeight: 'bold' }} />
+                <Chip 
+                    label={isOutOfStock ? "Нет в наличии" : `В наличии: ${product.quantity}`} 
+                    color={isOutOfStock ? "error" : "success"} 
+                    variant={isOutOfStock ? "filled" : "outlined"}
+                    icon={isOutOfStock ? <BlockIcon /> : undefined}
+                    sx={{ fontWeight: 'bold', height: 32 }} 
+                />
             </Box>
             
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
                 Артикул: {product.id}
             </Typography>
 
-            <Typography variant="h3" sx={{ fontWeight: 700, color: "#1976d2", display: 'flex', alignItems: 'center', gap: 1 }}>
-              {priceDisplay}
-              <LocalOffer sx={{ fontSize: 30, opacity: 0.5 }} />
+            <Typography variant="h3" sx={{ fontWeight: 700, color: isOutOfStock ? "gray" : "#2563eb", display: 'flex', alignItems: 'center', gap: 1 }}>
+              ${product.price}
+              {!isOutOfStock && <LocalOffer sx={{ fontSize: 30, opacity: 0.5 }} />}
             </Typography>
           </Box>
 
           <Divider />
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography variant="subtitle1" fontWeight="bold">Количество:</Typography>
+            <Typography variant="subtitle1" fontWeight="bold" color={isOutOfStock ? "error" : "textPrimary"}>
+                {isOutOfStock ? "Этот товар закончился" : "Количество:"}
+            </Typography>
             
             <Box sx={{ display: "flex", gap: 2, flexWrap: 'wrap' }}>
                 <Box sx={{ 
                     display: "flex", alignItems: "center", 
                     border: '1px solid #e0e0e0', borderRadius: '50px', 
-                    px: 1, py: 0.5, bgcolor: '#fafafa' 
+                    px: 1, py: 0.5, bgcolor: isOutOfStock ? '#eee' : '#fafafa',
+                    opacity: isOutOfStock ? 0.5 : 1,
+                    pointerEvents: isOutOfStock ? 'none' : 'auto'
                 }}>
-                    <IconButton onClick={handleRemove} color="primary" size="medium">
+                    <IconButton onClick={handleRemove} color="primary" size="medium" disabled={isOutOfStock || quantity <= 1}>
                         <Remove />
                     </IconButton>
                     <TextField
                         value={quantity}
                         variant="standard"
+                        disabled={isOutOfStock}
                         InputProps={{ disableUnderline: true }}
                         sx={{ width: 50, textAlign: 'center', '& input': { textAlign: 'center', fontWeight: 'bold', fontSize: '1.2rem' } }}
                         onChange={(e) => {
-                            const val = parseInt(e.target.value);
-                            if (!isNaN(val) && val > 0) setQuantity(val);
+                            let val = parseInt(e.target.value);
+                            if (isNaN(val) || val < 1) val = 1;
+                            if (val > maxQuantity) val = maxQuantity;
+                            setQuantity(val);
                         }}
                     />
-                    <IconButton onClick={handleAdd} color="primary" size="medium">
+                    <IconButton onClick={handleAdd} color="primary" size="medium" disabled={isOutOfStock || quantity >= maxQuantity}>
                         <Add />
                     </IconButton>
                 </Box>
@@ -203,20 +230,27 @@ export default function Product() {
                 <Button 
                     variant="contained" 
                     size="large" 
-                    startIcon={<ShoppingCart />}
+                    startIcon={isOutOfStock ? <BlockIcon /> : <ShoppingCart />}
                     onClick={handleBuy}
+                    disabled={isOutOfStock}
                     sx={{ 
                         flexGrow: 1, 
                         borderRadius: '50px', 
                         fontSize: '1.1rem', 
                         fontWeight: 'bold', 
-                        boxShadow: '0 8px 20px rgba(25, 118, 210, 0.3)',
-                        py: 1.5
+                        py: 1.5,
+                        bgcolor: isOutOfStock ? '#bdbdbd !important' : 'primary.main',
+                        color: isOutOfStock ? '#fff !important' : 'white'
                     }}
                 >
-                    Добавить в корзину
+                    {isOutOfStock ? "Нет в наличии" : "Добавить в корзину"}
                 </Button>
             </Box>
+            {quantity >= maxQuantity && !isOutOfStock && (
+                <Typography variant="caption" color="warning.main" fontWeight="bold">
+                    Вы выбрали максимально доступное количество
+                </Typography>
+            )}
           </Box>
 
           <Paper elevation={0} sx={{ bgcolor: '#f5f9ff', p: 3, borderRadius: 3, mt: 1 }}>
@@ -225,7 +259,7 @@ export default function Product() {
                 <Typography variant="h6" fontWeight="bold">Описание</Typography>
             </Box>
             <Typography variant="body1" sx={{ color: '#444', lineHeight: 1.7 }}>
-                {product.description || "Производитель не предоставил подробное описание для этого товара, но мы уверены, что он отличного качества!"}
+                {product.description || "Описание отсутствует."}
             </Typography>
           </Paper>
 

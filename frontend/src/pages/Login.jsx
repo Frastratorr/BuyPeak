@@ -8,7 +8,7 @@ import {
   Typography, 
   Alert, 
   Paper, 
-  Avatar,
+  Avatar, 
   InputAdornment,
   CircularProgress
 } from "@mui/material";
@@ -41,29 +41,33 @@ export default function Login() {
       
       if (!res.ok) {
         setLoading(false);
-        return setError(data.error);
+        return setError(data.error || "Ошибка сервера");
       }
 
       login(data);
-      navigate(`/profile/${data.id}`);
+      if (data.role === 'admin') {
+          navigate("/admin");
+      } else {
+          navigate(`/profile/${data.id}`);
+      }
     } catch {
-      setError("Ошибка сервера. Попробуйте позже.");
+      setError("Ошибка соединения с сервером");
       setLoading(false);
     }
   };
 
   return (
     <Box 
+      className="fade-in"
       sx={{ 
         minHeight: "80vh",
         display: "flex", 
         alignItems: "center", 
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%)"
+        justifyContent: "center"
       }}
     >
       <Paper 
-        elevation={6} 
+        className="glass"
         sx={{ 
           p: 4, 
           width: "100%", 
@@ -132,7 +136,7 @@ export default function Login() {
           <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
             <Typography variant="body2" color="text.secondary">
               Нет аккаунта?{" "}
-              <Link to="/register" style={{ textDecoration: "none", color: "#1976d2", fontWeight: "bold" }}>
+              <Link to="/register" style={{ textDecoration: "none", color: "#2563eb", fontWeight: "bold" }}>
                 Зарегистрироваться
               </Link>
             </Typography>

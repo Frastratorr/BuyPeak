@@ -11,6 +11,7 @@ import Register from './pages/Register';
 import CartPage from './pages/CartPage';
 import CheckoutPage from "./pages/CheckoutPage.jsx";
 import MyOrders from "./pages/MyOrders.jsx";
+import AdminPage from "./pages/AdminPage.jsx";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/cart" element={<CartPage />}/>
         <Route path="/checkout" element={<CheckoutPage />}/>
         <Route path="/myorders" element={<MyOrders />}/>
+        <Route path="/admin" element={<AdminPage />}/>
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AuthProvider>

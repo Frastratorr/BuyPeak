@@ -22,6 +22,19 @@ import EventIcon from "@mui/icons-material/Event";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 
+const getStatusConfig = (status) => {
+  switch (status) {
+    case "shipped":
+      return { label: "Отправлен", color: "info" };
+    case "delivered":
+      return { label: "Доставлен", color: "success" };
+    case "canceled":
+      return { label: "Отменен", color: "error" };
+    default:
+      return { label: "В обработке", color: "warning" };
+  }
+};
+
 export default function MyOrders() {
   const { user } = useContext(AuthContext);
   const location = useLocation();
@@ -107,92 +120,96 @@ export default function MyOrders() {
         </Paper>
       ) : (
         <Stack spacing={2}>
-          {orders.map((order) => (
-            <Accordion 
-                key={order.id} 
-                id={`order-${order.id}`}
-                expanded={expanded === order.id}
-                onChange={handleChange(order.id)}
-                sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: "0 2px 8px rgba(0,0,0,0.05)", '&:before': { display: 'none' } }}
-            >
-              <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: expanded === order.id ? '#e3f2fd' : '#fff', transition: 'background-color 0.3s' }}>
-                <Grid container alignItems="center" spacing={2}>
-                  <Grid size={{ xs: 12, sm: 3 }}>
-                    <Typography variant="caption" color="text.secondary">Номер заказа</Typography>
-                    <Typography fontWeight="bold">#{order.id.toString().slice(-6)}</Typography>
+          {orders.map((order) => {
+            const statusConfig = getStatusConfig(order.status);
+            
+            return (
+              <Accordion 
+                  key={order.id} 
+                  id={`order-${order.id}`}
+                  expanded={expanded === order.id}
+                  onChange={handleChange(order.id)}
+                  sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: "0 2px 8px rgba(0,0,0,0.05)", '&:before': { display: 'none' } }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: expanded === order.id ? '#e3f2fd' : '#fff', transition: 'background-color 0.3s' }}>
+                  <Grid container alignItems="center" spacing={2}>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                      <Typography variant="caption" color="text.secondary">Номер заказа</Typography>
+                      <Typography fontWeight="bold">#{order.id.toString().slice(-6)}</Typography>
+                    </Grid>
+                    <Grid size={{ xs: 6, sm: 3 }}>
+                      <Typography variant="caption" color="text.secondary">Дата</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, paddingRight: "60px" }}>
+                          <EventIcon fontSize="small" color="action" />
+                          <Typography fontWeight="500" fontSize="0.9rem">
+                              {new Date(order.date).toLocaleDateString()}
+                          </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid size={{ xs: 6, sm: 3 }}>
+                      <Typography variant="caption" color="text.secondary">Сумма</Typography>
+                      <Typography fontWeight="bold" color="primary">${Number(order.total).toFixed(2)}</Typography>
+                    </Grid>
+                    <Grid size={{ xs: 12, sm: 3 }}>
+                      <Chip 
+                          label={statusConfig.label} 
+                          color={statusConfig.color} 
+                          size="small" 
+                          variant="outlined"
+                          sx={{ fontWeight: 'bold' }}
+                      />
+                    </Grid>
                   </Grid>
-                  <Grid size={{ xs: 6, sm: 3 }}>
-                    <Typography variant="caption" color="text.secondary">Дата</Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, paddingRight: "60px" }}>
-                        <EventIcon fontSize="small" color="action" />
-                        <Typography fontWeight="500" fontSize="0.9rem">
-                            {new Date(order.date).toLocaleDateString()}
-                        </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid size={{ xs: 6, sm: 3 }}>
-                    <Typography variant="caption" color="text.secondary">Сумма</Typography>
-                    <Typography fontWeight="bold" color="primary">${Number(order.total).toFixed(2)}</Typography>
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 3 }}>
-                    <Chip 
-                        label={order.status === "processing" ? "В обработке" : "Выполнен"} 
-                        color={order.status === "processing" ? "warning" : "success"} 
-                        size="small" 
-                        variant="outlined"
-                        sx={{ fontWeight: 'bold' }}
-                    />
-                  </Grid>
-                </Grid>
-              </AccordionSummary>
+                </AccordionSummary>
 
-              <AccordionDetails sx={{ p: 0 }}>
-                <Divider />
-                <Box sx={{ p: 3, bgcolor: "#fafafa" }}>
-                    <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>Состав заказа:</Typography>
-                    
-                    <Stack spacing={2}>
-                        {order.items.map((item, index) => (
-                            <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: 'white', p: 1.5, borderRadius: 2, border: '1px solid #eee' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <Avatar 
-                                        src={item.img || item.image || "https://placehold.co/50"} 
-                                        variant="rounded"
-                                        sx={{ width: 50, height: 50 }} 
-                                    />
-                                    <Box>
-                                        <Typography variant="body2" fontWeight="bold">{item.name}</Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {item.quantity} шт. x ${item.price}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                                <Typography fontWeight="bold" color="#333">
-                                    ${((Number(String(item.price).replace(/[^0-9.]/g, '')) || 0) * item.quantity).toFixed(2)}
-                                </Typography>
-                            </Box>
-                        ))}
-                    </Stack>
+                <AccordionDetails sx={{ p: 0 }}>
+                  <Divider />
+                  <Box sx={{ p: 3, bgcolor: "#fafafa" }}>
+                      <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>Состав заказа:</Typography>
+                      
+                      <Stack spacing={2}>
+                          {order.items.map((item, index) => (
+                              <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: 'white', p: 1.5, borderRadius: 2, border: '1px solid #eee' }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                      <Avatar 
+                                          src={item.img || item.image || "https://placehold.co/50"} 
+                                          variant="rounded"
+                                          sx={{ width: 50, height: 50 }} 
+                                      />
+                                      <Box>
+                                          <Typography variant="body2" fontWeight="bold">{item.name}</Typography>
+                                          <Typography variant="caption" color="text.secondary">
+                                              {item.quantity} шт. x ${item.price}
+                                          </Typography>
+                                      </Box>
+                                  </Box>
+                                  <Typography fontWeight="bold" color="#333">
+                                      ${((Number(String(item.price).replace(/[^0-9.]/g, '')) || 0) * item.quantity).toFixed(2)}
+                                  </Typography>
+                              </Box>
+                          ))}
+                      </Stack>
 
-                    <Box sx={{ mt: 3, p: 2, bgcolor: 'white', borderRadius: 2, border: '1px dashed #ccc' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                            <LocalShippingIcon color="action" fontSize="small" />
-                            <Typography variant="subtitle2" fontWeight="bold">Доставка:</Typography>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary">
-                            {order.shippingInfo?.name}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            {order.shippingInfo?.country}, {order.shippingInfo?.address}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            {order.shippingInfo?.phone}
-                        </Typography>
-                    </Box>
-                </Box>
-              </AccordionDetails>
-            </Accordion>
-          ))}
+                      <Box sx={{ mt: 3, p: 2, bgcolor: 'white', borderRadius: 2, border: '1px dashed #ccc' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                              <LocalShippingIcon color="action" fontSize="small" />
+                              <Typography variant="subtitle2" fontWeight="bold">Доставка:</Typography>
+                          </Box>
+                          <Typography variant="body2" color="text.secondary">
+                              {order.shippingInfo?.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                              {order.shippingInfo?.country}, {order.shippingInfo?.address}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                              {order.shippingInfo?.phone}
+                          </Typography>
+                      </Box>
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
+            );
+          })}
         </Stack>
       )}
     </Box>

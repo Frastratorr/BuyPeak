@@ -1,84 +1,189 @@
 import { useState } from "react";
-import { Box, Typography, Avatar, Rating, IconButton } from "@mui/material";
-import { ThumbUp, Delete } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
-import defaultAvatar from "../assets/img/default-avatar.jpg";
+import { Link } from "react-router-dom";
+import { 
+  Box, 
+  Typography, 
+  Avatar, 
+  Rating, 
+  Stack, 
+  Button, 
+  Menu, 
+  MenuItem, 
+  IconButton,
+  Paper
+} from "@mui/material";
+import { 
+  Sort as SortIcon, 
+  KeyboardArrowDown, 
+  ThumbUpAltOutlined
+} from "@mui/icons-material";
 
-export default function ReviewsBlock({ reviews, saveReviews, currentUser }) {
-  const navigate = useNavigate();
-  const [sortBy, setSortBy] = useState("date");
+export default function ReviewsBlock({ reviews }) {
+  const [sortOption, setSortOption] = useState("newest");
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
 
-  const handleLike = (id) => {
-    if (!currentUser) return;
-    const updated = reviews.map(r => {
-      if (r.id !== id) return r;
-
-      const alreadyLiked = r.likeBy?.includes(currentUser.id);
-      return {
-        ...r,
-        likeBy: alreadyLiked ? r.likeBy.filter(uid => uid !== currentUser.id) : [...(r.likeBy || []), currentUser.id],
-        likes: alreadyLiked ? Math.max((r.likes || 1) - 1, 0) : (r.likes || 0) + 1
-      };
-    });
-    saveReviews(updated);
+  const handleClickSort = (event) => {
+    setAnchorEl(event.currentTarget);
   };
 
-  const handleDelete = (id) => {
-    saveReviews(reviews.filter(r => r.id !== id));
+  const handleCloseSort = (option) => {
+    if (option) setSortOption(option);
+    setAnchorEl(null);
   };
 
-  const sortedReviews = [...reviews].sort((a, b) => {
-    if (sortBy === "rating") return b.rating - a.rating;
-    return b.date - a.date;
+  const safeReviews = Array.isArray(reviews) ? reviews : [];
+
+  const sortedReviews = [...safeReviews].sort((a, b) => {
+    switch (sortOption) {
+      case "newest": return b.date - a.date;
+      case "oldest": return a.date - b.date;
+      case "high": return b.rating - a.rating;
+      case "low": return a.rating - b.rating;
+      default: return 0;
+    }
   });
 
-  if (reviews.length === 0) return null;
+  const getSortLabel = () => {
+    switch (sortOption) {
+      case "newest": return "Сначала новые";
+      case "oldest": return "Сначала старые";
+      case "high": return "С высоким рейтингом";
+      case "low": return "С низким рейтингом";
+      default: return "Сортировка";
+    }
+  };
+
+  function stringAvatar(name) {
+    const bgColors = ["#f44336", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3", "#009688", "#4caf50", "#ff9800", "#795548"];
+    let hash = 0;
+    const safeName = name || "Guest";
+    for (let i = 0; i < safeName.length; i++) {
+      hash = safeName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const color = bgColors[Math.abs(hash) % bgColors.length];
+    return { sx: { bgcolor: color } };
+  }
 
   return (
-    <Box sx={{ mt: 4, display: "flex", flexDirection: "column", gap: 2 }}>
-      <Typography variant="h6">Отзывы:</Typography>
-      <Box sx={{ mb: 2 }}>
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          style={{ padding: "4px 8px", borderRadius: 4 }}
-        >
-          <option value="date">По дате</option>
-          <option value="rating">По рейтингу</option>
-        </select>
+    <Box>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+        <Typography variant="subtitle1" fontWeight="bold" color="text.secondary">
+          {safeReviews.length} {safeReviews.length === 1 ? "отзыв" : "отзыва"}
+        </Typography>
+
+        {safeReviews.length > 0 && (
+          <>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<SortIcon />}
+              endIcon={<KeyboardArrowDown />}
+              onClick={handleClickSort}
+              sx={{ 
+                borderRadius: "20px", 
+                textTransform: "none", 
+                borderColor: "#e0e0e0", 
+                color: "#555",
+                fontWeight: 600,
+                padding: "5px 15px",
+                '&:hover': { borderColor: "#1976d2", bgcolor: "#f5f9ff", color: "#1976d2" }
+              }}
+            >
+              {getSortLabel()}
+            </Button>
+
+            <Menu
+              anchorEl={anchorEl}
+              open={open}
+              onClose={() => handleCloseSort(null)}
+              PaperProps={{ 
+                elevation: 3, 
+                sx: { borderRadius: 3, mt: 1, minWidth: 200 } 
+              }}
+            >
+              <MenuItem onClick={() => handleCloseSort("newest")} selected={sortOption === "newest"}>Сначала новые</MenuItem>
+              <MenuItem onClick={() => handleCloseSort("oldest")} selected={sortOption === "oldest"}>Сначала старые</MenuItem>
+              <MenuItem onClick={() => handleCloseSort("high")} selected={sortOption === "high"}>С высоким рейтингом</MenuItem>
+              <MenuItem onClick={() => handleCloseSort("low")} selected={sortOption === "low"}>С низким рейтингом</MenuItem>
+            </Menu>
+          </>
+        )}
       </Box>
 
-      {sortedReviews.map(r => (
-        <Box key={r.id} sx={{ display: "flex", gap: 2, border: "1px solid #ccc", borderRadius: 2, padding: 1 }}>
-          <Avatar
-            src={r.avatar || defaultAvatar}
-            alt={r.nickname}
-            sx={{ width: 40, height: 40, cursor: "pointer" }}
-            onClick={() => navigate(`/profile/${r.userId}`)}
-          />
-          <Box sx={{ flex: 1 }}>
-            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-              <Typography sx={{ cursor: "pointer", fontWeight: 600 }} onClick={() => navigate(`/profile/${r.userId}`)}>{r.nickname}</Typography>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <IconButton size="small" onClick={() => handleLike(r.id)}>
-                  <ThumbUp fontSize="small" color={r.likeBy?.includes(currentUser?.id) ? "primary" : "inherit"} />
-                </IconButton>
-                <Typography>{r.likes || 0}</Typography>
-                {currentUser && r.userId === currentUser.id && (
-                  <IconButton size="small" onClick={() => handleDelete(r.id)}>
-                    <Delete fontSize="small" />
-                  </IconButton>
-                )}
-              </Box>
-            </Box>
-            <Rating value={r.rating} readOnly size="small" />
-            <Typography>{r.text}</Typography>
-            <Typography sx={{ fontSize: 12, color: "gray" }}>
-              {new Date(r.date).toLocaleString()}
+      <Stack spacing={2}>
+        {sortedReviews.length === 0 ? (
+          <Box sx={{ textAlign: "center", py: 4, bgcolor: "#f9f9f9", borderRadius: 3, border: "1px dashed #e0e0e0" }}>
+            <Typography variant="body2" color="text.secondary">
+              Отзывов пока нет. Будьте первым!
             </Typography>
           </Box>
-        </Box>
-      ))}
+        ) : (
+          sortedReviews.map((review) => (
+            <Paper 
+                key={review.id} 
+                elevation={0}
+                sx={{ 
+                    p: 2, 
+                    borderRadius: 3, 
+                    bgcolor: "#fff", 
+                    border: "1px solid #f0f0f0",
+                    transition: "0.2s",
+                    '&:hover': { boxShadow: "0 4px 12px rgba(0,0,0,0.05)", borderColor: "transparent", transform: "translateY(-2px)" }
+                }}
+            >
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1 }}>
+                
+                <Box 
+                    component={Link}
+                    to={`/profile/${review.userId}`}
+                    sx={{ 
+                        display: "flex", 
+                        gap: 2, 
+                        alignItems: "center",
+                        textDecoration: "none", 
+                        color: "inherit",
+                        cursor: "pointer",
+                        '&:hover .nickname': { color: "#1976d2", textDecoration: "underline" }
+                    }}
+                >
+                    {review.avatar && review.avatar.includes("base64") ? (
+                        <Avatar src={review.avatar} />
+                    ) : (
+                        <Avatar {...stringAvatar(review.nickname)}>
+                            {review.nickname ? review.nickname[0].toUpperCase() : "G"}
+                        </Avatar>
+                    )}
+                    
+                    <Box>
+                        <Typography variant="subtitle2" fontWeight="bold" className="nickname" sx={{ transition: "0.2s" }}>
+                            {review.nickname || "Аноним"}
+                        </Typography>
+                        <Rating value={review.rating} readOnly size="small" />
+                    </Box>
+                </Box>
+                
+                <Typography variant="caption" color="text.secondary">
+                    {new Date(review.date).toLocaleDateString()}
+                </Typography>
+              </Box>
+
+              <Typography variant="body2" sx={{ lineHeight: 1.6, color: "#333", mb: 2, mt: 1 }}>
+                {review.text}
+              </Typography>
+
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                 <IconButton size="small" sx={{ color: "#aaa", '&:hover': { color: "#1976d2" } }}>
+                    <ThumbUpAltOutlined fontSize="small" />
+                 </IconButton>
+                 <Typography variant="caption" color="text.secondary" sx={{ cursor: "pointer" }}>
+                    Полезно
+                 </Typography>
+              </Box>
+            </Paper>
+          ))
+        )}
+      </Stack>
     </Box>
   );
 }

@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProductCard from '../components/ProductCard';
-import { productsData } from "../data/products";
 import { 
   Box, 
   Typography, 
@@ -8,7 +7,8 @@ import {
   Button, 
   Paper, 
   Stack, 
-  Divider 
+  Divider, 
+  CircularProgress
 } from "@mui/material";
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
@@ -16,12 +16,23 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import InventoryIcon from '@mui/icons-material/Inventory';
 
 export default function Catalog() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [maxQuantity, setMaxQuantity] = useState("");
   const [minQuantity, setMinQuantity] = useState("");
 
-  const products = productsData.filter(p => {
+  useEffect(() => {
+    fetch("http://localhost:5000/products")
+      .then(res => res.json())
+      .then(data => setProducts(data))
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filteredProducts = products.filter(p => {
     if (minPrice && p.price < Number(minPrice)) return false;
     if (maxPrice && p.price > Number(maxPrice)) return false;
     if (minQuantity && p.quantity < Number(minQuantity)) return false;
@@ -29,22 +40,28 @@ export default function Catalog() {
     return true;
   });
 
+  if (loading) return (
+    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
+        <CircularProgress />
+    </Box>
+  );
+
   return (
-    <Box sx={{ display: "flex", p: 4, gap: 4, maxWidth: "1400px", mx: "auto", minHeight: "100vh", bgcolor: "#f9f9f9", alignItems: "flex-start" }}>
+    <Box className="fade-in" sx={{ display: "flex", p: 4, gap: 4, maxWidth: "1400px", mx: "auto", minHeight: "100vh", alignItems: "flex-start" }}>
 
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography variant="h4" sx={{ mb: 3, fontWeight: "bold", color: "#333" }}>
           Каталог товаров
         </Typography>
 
-        {products.length === 0 ? (
+        {filteredProducts.length === 0 ? (
            <Box sx={{ textAlign: 'center', mt: 5, color: '#777' }}>
              <Typography variant="h6">Товары не найдены 😔</Typography>
              <Typography variant="body2">Попробуйте изменить параметры фильтров</Typography>
            </Box>
         ) : (
           <Stack spacing={3}>
-            {products.map(product => (
+            {filteredProducts.map(product => (
               <Box key={product.id} sx={{ width: '100%' }}>
                 <ProductCard {...product} />
               </Box>
@@ -53,15 +70,20 @@ export default function Catalog() {
         )}
       </Box>
 
-      <Box sx={{ width: "300px", flexShrink: 0 }}>
+      <Box sx={{ 
+          width: "320px", 
+          flexShrink: 0,
+          position: "sticky",
+          top: "120px",
+          zIndex: 10 
+      }}>
         <Paper
           elevation={3}
           sx={{
             p: 3,
-            borderRadius: 3,
-            bgcolor: "white",
-            position: "sticky",
-            top: "100px", 
+            borderRadius: 2,
+            maxHeight: "80vh",
+            overflowY: "auto"
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -132,10 +154,10 @@ export default function Catalog() {
               }}
               sx={{ 
                 mt: 2, 
-                borderRadius: "10px", 
+                borderRadius: 2, 
                 textTransform: "none", 
                 fontWeight: "bold",
-                boxShadow: "0 4px 10px rgba(25, 118, 210, 0.3)"
+                py: 1.5
               }}
             >
               Сбросить фильтры

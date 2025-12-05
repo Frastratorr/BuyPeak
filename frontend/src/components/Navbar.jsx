@@ -22,7 +22,8 @@ import {
     ShoppingBag as OrdersIcon,
     KeyboardArrowDown,
     ReceiptLong,
-    ArrowForward
+    ArrowForward,
+    AdminPanelSettings
 } from "@mui/icons-material";
 import defaultAvatar from "../assets/img/default-avatar.jpg";
 
@@ -42,11 +43,14 @@ export default function Navbar() {
     if (user) {
         try {
             const res = await fetch(`http://localhost:5000/orders/${user.id}`);
+            
             if (!res.ok) {
                 setRecentOrders([]);
                 return;
             }
+
             const data = await res.json();
+            
             if (Array.isArray(data)) {
                 setRecentOrders(data.reverse().slice(0, 5));
             }
@@ -73,17 +77,23 @@ export default function Navbar() {
 
   return (
     <Box 
+      className="glass"
       sx={{ 
         display: "flex", 
         justifyContent: "space-between", 
         alignItems: "center", 
-        padding: "10px 30px", 
-        background: "linear-gradient(90deg, #1565c0 0%, #1976d2 100%)", 
-        color: "white",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        padding: "12px 40px", 
+        color: "#333",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
         position: 'sticky',
-        top: 0,
-        zIndex: 1000
+        top: 20,
+        left: 0,
+        right: 0,
+        margin: "0 auto",
+        width: "95%",
+        borderRadius: "24px",
+        zIndex: 1000,
+        transition: "all 0.3s ease",
       }}
     >
       <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
@@ -91,14 +101,14 @@ export default function Navbar() {
             variant="h5" 
             sx={{ fontWeight: "bold", letterSpacing: "1px", mr: 2 }}
         >
-          <Link to="/" style={{ textDecoration: "none", color: "white" }}>BuyPeak</Link>
+          <Link to="/" style={{ textDecoration: "none", color: "#2563eb" }}>BuyPeak</Link>
         </Typography>
         
         <Button
           component={Link}
           to="/catalog"
           startIcon={<CategoryIcon />}
-          sx={{ color: "white", textTransform: "none", fontSize: "16px" }}
+          sx={{ color: "#333", textTransform: "none", fontSize: "16px" }}
         >
           Каталог
         </Button>
@@ -109,7 +119,7 @@ export default function Navbar() {
                     onClick={handleOpenOrders}
                     startIcon={<OrdersIcon />}
                     endIcon={<KeyboardArrowDown />}
-                    sx={{ color: "white", textTransform: "none", fontSize: "16px" }}
+                    sx={{ color: "#333", textTransform: "none", fontSize: "16px" }}
                 >
                     Мои заказы
                 </Button>
@@ -155,34 +165,46 @@ export default function Navbar() {
                 </Menu>
             </>
         )}
+
+        {(user?.email === "admin@gmail.com" || user?.role === "admin") && (
+            <Button
+                component={Link}
+                to="/admin"
+                startIcon={<AdminPanelSettings />}
+                sx={{ color: "#333", textTransform: "none", fontSize: "16px" }}
+            >
+                Админка
+            </Button>
+        )}
       </Box>
 
       <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-        <IconButton color="inherit" onClick={() => navigate("/cart")} sx={{ transition: "0.2s", '&:hover': { transform: "scale(1.1)" } }}>
+        
+        <IconButton onClick={() => navigate("/cart")} sx={{ color: "#333", transition: "0.2s", '&:hover': { transform: "scale(1.1)", color: "#1976d2" } }}>
           <Badge badgeContent={totalQty} color="error">
-            <ShoppingCart sx={{ color: "white" }} />
+            <ShoppingCart />
           </Badge>
         </IconButton>
 
         {!user ? (
           <Box sx={{ display: "flex", gap: 1 }}>
             <Link to="/login" style={{ textDecoration: "none" }}>
-              <Button sx={{ color: 'white', textTransform: 'none' }}>Вход</Button>
+              <Button sx={{ color: '#333', textTransform: 'none' }}>Вход</Button>
             </Link>
             <Link to="/register" style={{ textDecoration: "none" }}>
-              <Button variant="contained" color="secondary" sx={{ borderRadius: '20px', textTransform: 'none' }}>Регистрация</Button>
+              <Button variant="contained" color="primary" sx={{ borderRadius: '20px', textTransform: 'none' }}>Регистрация</Button>
             </Link>
           </Box>
         ) : (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, background: "rgba(255,255,255,0.1)", padding: "5px 15px", borderRadius: "30px" }}>
-            <Link to={`/profile/${user.id}`} style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "white" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, background: "rgba(0,0,0,0.05)", padding: "5px 15px", borderRadius: "30px" }}>
+            <Link to={`/profile/${user.id}`} style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", color: "#333" }}>
               <Typography sx={{ fontWeight: 500, display: { xs: 'none', sm: 'block' } }}>
                 {user.name}
               </Typography>
-              <Avatar src={user.avatar ? user.avatar : defaultAvatar} alt={user.name} sx={{ width: 32, height: 32, border: "2px solid white" }} />
+              <Avatar src={user.avatar ? user.avatar : defaultAvatar} alt={user.name} sx={{ width: 32, height: 32, border: "2px solid #fff" }} />
             </Link>
             
-            <IconButton onClick={logout} size="small" sx={{ color: "rgba(255,255,255,0.7)", '&:hover': { color: "white" } }}>
+            <IconButton onClick={logout} size="small" sx={{ color: "#777", '&:hover': { color: "#d32f2f" } }}>
                 <LogoutIcon />
             </IconButton>
           </Box>
