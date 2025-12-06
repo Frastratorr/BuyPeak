@@ -1,209 +1,214 @@
 import express from "express";
-import fs from "fs";
 import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+dotenv.config();
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT;
+const MONGO_URI = process.env.MONGO_URI;
 
-const dbFile = path.join(__dirname, "db.json");
+mongoose.connect(MONGO_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch((err) => console.error("DB Error:", err));
 
-if (!fs.existsSync(dbFile)) {
-  fs.writeFileSync(dbFile, JSON.stringify({ users: [], reviews: [], cart: [], orders: [], products: [] }, null, 2));
-}
+const User = mongoose.model('User', new mongoose.Schema({
+  id: String,
+  name: String,
+  email: String,
+  password: String,
+  avatar: String,
+  bio: String,
+  role: { type: String, default: "user" },
+  isBlocked: { type: Boolean, default: false },
+  createdAt: String
+}));
+
+const Product = mongoose.model('Product', new mongoose.Schema({
+  id: Number,
+  name: String,
+  price: Number,
+  image: String,
+  description: String,
+  quantity: Number
+}));
+
+const Review = mongoose.model('Review', new mongoose.Schema({
+  id: Number,
+  text: String,
+  rating: Number,
+  userId: String,
+  productId: Number,
+  date: Number
+}));
+
+const Order = mongoose.model('Order', new mongoose.Schema({
+  id: Number,
+  userId: String,
+  items: Array,
+  total: Number,
+  shippingInfo: Object,
+  date: Number,
+  status: String
+}));
+
+const Cart = mongoose.model('Cart', new mongoose.Schema({
+  userId: String,
+  items: Array
+}));
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-const getDb = () => {
-  try {
-    return JSON.parse(fs.readFileSync(dbFile));
-  } catch (e) {
-    return { users: [], reviews: [], cart: [], orders: [], products: [] };
-  }
-};
-
-const saveDb = (data) => {
-  fs.writeFileSync(dbFile, JSON.stringify(data, null, 2));
-};
-
-const enrichReviewsWithUserData = (reviews, users) => {
-  return reviews.map(review => {
-    const author = users.find(u => String(u.id) === String(review.userId));
-
-    if (author) {
-      return {
-        ...review,
-        avatar: author.avatar || review.avatar,
-        nickname: author.name || review.nickname 
-      };
-    }
-    return review;
-  });
-};
-
-app.get("/users", (req, res) => {
-  const db = getDb();
-  res.json(db.users);
+app.get("/products", async (req, res) => {
+  const products = await Product.find();
+  res.json(products);
 });
 
-app.get("/users/:id", (req, res) => {
-  const db = getDb();
-  const user = db.users.find(u => String(u.id) === String(req.params.id));
+app.post("/products", async (req, res) => {
+  const newProduct = new Product({ id: Date.now(), ...req.body });
+  await newProduct.save();
+  res.json(newProduct);
+});
+
+app.put("/products/:id", async (req, res) => {
+  const product = await Product.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
+  res.json(product);
+});
+
+app.delete("/products/:id", async (req, res) => {
+  await Product.findOneAndDelete({ id: req.params.id });
+  res.json({ success: true });
+});
+
+app.post("/users", async (req, res) => {
+  const { email } = req.body;
+  const existingUser = await User.findOne({ email });
   
+  if (existingUser) {
+    return res.status(400).json({ error: "Пользователь уже существует" });
+  }
+
+  const newUser = new User({
+    id: Date.now().toString(),
+    ...req.body,
+    createdAt: new Date().toISOString()
+  });
+  
+  await newUser.save();
+  res.json(newUser);
+});
+
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  const user = await User.findOne({ email, password });
+
   if (!user) {
-    return res.status(404).json({ error: "Пользователь не найден" });
+    return res.status(400).json({ error: "Неверный логин или пароль" });
+  }
+  if (user.isBlocked) {
+    return res.status(403).json({ error: "Вы были заблокированы" });
   }
   res.json(user);
 });
 
-app.post("/users", (req, res) => {
-  const { name, email, password } = req.body;
-  const db = getDb();
-
-  if (db.users.find(u => u.email === email)) {
-    return res.status(400).json({ error: "Пользователь с таким email уже существует" });
-  }
-
-  const newUser = {
-    id: Date.now(),
-    name,
-    email,
-    password,
-    avatar: "/images/default-avatar.jpg",
-    bio: "Привет! Я новый пользователь.",
-    role: "user",
-    isBlocked: false,
-    createdAt: new Date().toISOString()
-  };
-
-  db.users.push(newUser);
-  saveDb(db);
-
-  res.json(newUser);
+app.get("/users", async (req, res) => {
+  const users = await User.find();
+  res.json(users);
 });
 
-app.post("/login", (req, res) => {
-  const { email, password } = req.body;
-  const db = getDb();
-  const foundUser = db.users.find(u => u.email === email && u.password === password);
-
-  if (!foundUser) {
-    return res.status(400).json({ error: "Неверный email или пароль" });
-  }
-
-  if (foundUser.isBlocked) {
-    return res.status(403).json({ error: "Ваш аккаунт заблокирован администратором" });
-  }
-
-  res.json(foundUser);
+app.get("/users/:id", async (req, res) => {
+  const user = await User.findOne({ id: req.params.id });
+  if (!user) return res.status(404).json({ error: "Пользователь не найден" });
+  res.json(user);
 });
 
-app.put("/users/:id", (req, res) => {
-    const { id } = req.params;
-    const updateData = req.body;
-
-    const db = getDb();
-    const index = db.users.findIndex(u => String(u.id) === String(id));
-    
-    if (index === -1) return res.status(404).json({error: "Пользователь не найден"});
-
-    const updatedUser = {...db.users[index], ...updateData, id: db.users[index].id };
-    db.users[index] = updatedUser;
-    
-    saveDb(db);
-
-    res.json(updatedUser);
+app.put("/users/:id", async (req, res) => {
+  const user = await User.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
+  res.json(user);
 });
 
-app.get("/reviews", (req, res) => {
-  const db = getDb();
-  const updatedReviews = enrichReviewsWithUserData(db.reviews, db.users);
-  res.json(updatedReviews);
-});
-
-app.get("/reviews/product/:id", (req, res) => {
-  try {
-    const db = getDb();
-    const productReviews = db.reviews.filter(r => String(r.productId) === String(req.params.id));
-    const updatedProductReviews = enrichReviewsWithUserData(productReviews, db.users);
-    res.json(updatedProductReviews);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Не удалось загрузить отзывы" });
-  }
-});
-
-app.post("/reviews", (req, res) => {
-  try {
-    const db = getDb();
-    const newReview = { id: Date.now(), ...req.body };
-    db.reviews.push(newReview);
-    saveDb(db);
-    res.json(newReview);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Не удалось сохранить отзыв" });
-  }
-});
-
-app.get("/cart/:userId", (req, res) => {
-  const db = getDb();
-  const userCartEntry = db.carts.find(c => String(c.userId) === String(req.params.userId));
+app.get("/reviews", async (req, res) => {
+  const reviews = await Review.find();
+  const users = await User.find();
   
-  res.json(userCartEntry ? userCartEntry.items : []);
+  const enriched = reviews.map(r => {
+      const author = users.find(u => u.id === r.userId);
+      return author ? { ...r._doc, avatar: author.avatar, nickname: author.name } : r;
+  });
+  
+  res.json(enriched);
 });
 
-app.post("/cart/:userId", (req, res) => {
-  const { userId } = req.params;
-  const { items } = req.body; 
+app.get("/reviews/product/:id", async (req, res) => {
+  const reviews = await Review.find({ productId: req.params.id });
+  const users = await User.find();
+  
+  const enriched = reviews.map(r => {
+      const author = users.find(u => u.id === r.userId);
+      return author ? { ...r._doc, avatar: author.avatar, nickname: author.name } : r;
+  });
+  
+  res.json(enriched);
+});
 
-  const db = getDb();
-  const cartIndex = db.carts.findIndex(c => String(c.userId) === String(userId));
+app.post("/reviews", async (req, res) => {
+  const newReview = new Review({ id: Date.now(), ...req.body });
+  await newReview.save();
+  res.json(newReview);
+});
 
-  if (cartIndex !== -1) {
-    db.carts[cartIndex].items = items;
+app.get("/cart/:userId", async (req, res) => {
+  const cart = await Cart.findOne({ userId: req.params.userId });
+  res.json(cart ? cart.items : []);
+});
+
+app.post("/cart/:userId", async (req, res) => {
+  const { items } = req.body;
+  let cart = await Cart.findOne({ userId: req.params.userId });
+  
+  if (cart) {
+    cart.items = items;
+    await cart.save();
   } else {
-    db.carts.push({ userId, items });
+    cart = new Cart({ userId: req.params.userId, items });
+    await cart.save();
   }
-
-  saveDb(db);
   res.json({ success: true, items });
 });
 
-app.get("/orders/:userId", (req, res) => {
-  const db = getDb();
-  const orders = db.orders || [];
-  const userOrders = orders.filter(o => String(o.userId) === String(req.params.userId));
-  res.json(userOrders);
+app.get("/orders/:userId", async (req, res) => {
+  const orders = await Order.find({ userId: req.params.userId });
+  res.json(orders);
 });
 
-app.post("/orders", (req, res) => {
-  const db = getDb();
+app.get("/admin/orders", async (req, res) => {
+  const orders = await Order.find();
+  res.json(orders);
+});
+
+app.put("/admin/orders/:id", async (req, res) => {
+  const order = await Order.findOneAndUpdate({ id: req.params.id }, { status: req.body.status }, { new: true });
+  res.json(order);
+});
+
+app.post("/orders", async (req, res) => {
   const { userId, items, total, shippingInfo, date } = req.body;
 
-  if (!db.orders) {
-      db.orders = [];
-  }
-
   for (const item of items) {
-    const productIndex = db.products.findIndex(p => String(p.id) === String(item.id));
-    if (productIndex !== -1) {
-      const currentQty = db.products[productIndex].quantity || 0;
-      if (currentQty < item.quantity) {
-        return res.status(404).json({ error: `Товара "${item.name}" осталось всего ${currentQty} шт.` });
-      }
-
-      db.products[productIndex].quantity -= item.quantity;
+    const product = await Product.findOne({ id: item.id });
+    if (product) {
+        if (product.quantity < item.quantity) {
+            return res.status(400).json({ error: `Товара "${item.name}" не хватает на складе` });
+        }
+        product.quantity -= item.quantity;
+        await product.save();
     }
   }
 
-  const newOrder = {
+  const newOrder = new Order({
     id: Date.now(),
     userId,
     items,
@@ -211,72 +216,13 @@ app.post("/orders", (req, res) => {
     shippingInfo,
     date: date || Date.now(),
     status: "processing"
-  };
+  });
 
-  db.orders.push(newOrder);
-  
-  const cartIndex = db.carts.findIndex(c => String(c.userId) === String(userId));
-  if (cartIndex !== -1) {
-    db.carts[cartIndex].items = [];
-  }
+  await newOrder.save();
 
-  saveDb(db);
+  await Cart.findOneAndUpdate({ userId }, { items: [] });
+
   res.json(newOrder);
-});
-
-app.get("/products", (req, res) => {
-  const db = getDb();
-  res.json(db.products || []);
-});
-
-app.post("/products", (req, res) => {
-  const db = getDb();
-  const newProduct = {
-    id: Date.now(),
-    ...req.body
-  };
-  if (!db.products) db.products = [];
-  db.products.push(newProduct);
-  saveDb(db);
-  res.json(newProduct);
-});
-
-app.put("/products/:id", (req, res) => {
-  const db = getDb();
-  const index = db.products.findIndex(p => String(p.id) === String(req.params.id));
-  if (index !== -1) {
-    db.products[index] = { ...db.products[index], ...req.body };
-    saveDb(db);
-    res.json(db.products[index]);
-  } else {
-    res.status(404).json({ error: "Товар не найден" });
-  }
-});
-
-app.delete("/products/:id", (req, res) => {
-  const db = getDb();
-  if (db.products) {
-    db.products = db.products.filter(p => String(p.id) !== String(req.params.id));
-    saveDb(db);
-  }
-  res.json({ success: true });
-});
-
-app.get("/admin/orders", (req, res) => {
-  const db = getDb();
-  res.json(db.orders || []);
-});
-
-app.put("/admin/orders/:id", (req, res) => {
-  const db = getDb();
-  const index = db.orders.findIndex(o => String(o.id) === String(req.params.id));
-  if (index !== -1) {
-    db.orders[index].status = req.body.status;
-    saveDb(db);
-    res.json(db.orders[index]); 
-  } else {
-    res.status(404).json({ error: "Заказ не найден" });
-  }
 });
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

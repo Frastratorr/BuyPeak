@@ -11,9 +11,22 @@ import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import catalogPreview from '../assets/img/products/catalog-preview.jpg';
-import { productsData } from '../data/products';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/products")
+    .then(res => res.json())
+    .then(data => {
+      if (Array.isArray(data)) {
+        setProducts(data);
+      }
+    })
+    .catch(console.error);
+  }, [])
+
   const news = [
     { title: 'Новая коллекция!', date: '01.12', desc: 'Уже в продаже во всех категориях. Успейте купить новинки сезона по старым ценам.' },
     { title: 'Бесплатная доставка', date: '30.11', desc: 'При заказе от 100€ по всей Европе доставка осуществляется за наш счет.' },
@@ -131,7 +144,7 @@ export default function Home() {
             spaceBetween={20}
             slidesPerView={1}
             breakpoints={{ 640: { slidesPerView: 2 }, 900: { slidesPerView: 3 } }}
-            loop={true}
+            loop={services.length > 3}
             style={{ padding: '10px 5px' }}
           >
             {services.map((item, index) => (
@@ -156,7 +169,7 @@ export default function Home() {
                 spaceBetween={20} 
                 slidesPerView={1} 
                 breakpoints={{ 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } }}
-                loop={true}
+                loop={news.length > 3}
                 style={{ padding: '10px' }}
             >
             {news.map((item, index) => (
@@ -198,10 +211,10 @@ export default function Home() {
                 spaceBetween={25} 
                 slidesPerView={1} 
                 breakpoints={{ 500: { slidesPerView: 2 }, 900: { slidesPerView: 3 }, 1100: { slidesPerView: 4 } }}
-                loop={true}
+                loop={products.length > 4}
                 style={{ padding: '10px' }}
             >
-            {productsData.map(product => {
+            {products.map(product => {
                 const oldPrice = (product.price * 1.2).toFixed(2);
                 
                 return (
