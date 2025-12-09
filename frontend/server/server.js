@@ -6,223 +6,294 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT;
-const MONGO_URI = process.env.MONGO_URI;
+const PORT = 5000;
+const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/shop";
+const DEFAULT_AVATAR = "https://res.cloudinary.com/dg2pcfylr/image/upload/v1765308214/default-avatar_e3ep28.jpg";
 
 mongoose.connect(MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.error("DB Error:", err));
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => console.error("❌ DB Error:", err));
 
 const User = mongoose.model('User', new mongoose.Schema({
-  id: String,
+  id: mongoose.Schema.Types.Mixed,
   name: String,
   email: String,
   password: String,
-  avatar: String,
+  avatar: { type: String, default: DEFAULT_AVATAR },
   bio: String,
   role: { type: String, default: "user" },
   isBlocked: { type: Boolean, default: false },
   createdAt: String
-}));
+}, { strict: false }));
 
 const Product = mongoose.model('Product', new mongoose.Schema({
-  id: Number,
+  id: mongoose.Schema.Types.Mixed, 
   name: String,
   price: Number,
   image: String,
   description: String,
   quantity: Number
-}));
+}, { strict: false }));
 
 const Review = mongoose.model('Review', new mongoose.Schema({
   id: Number,
   text: String,
   rating: Number,
-  userId: String,
-  productId: Number,
+  userId: mongoose.Schema.Types.Mixed,
+  productId: mongoose.Schema.Types.Mixed,
   date: Number
-}));
+}, { strict: false }));
 
 const Order = mongoose.model('Order', new mongoose.Schema({
   id: Number,
-  userId: String,
+  userId: mongoose.Schema.Types.Mixed,
   items: Array,
   total: Number,
   shippingInfo: Object,
   date: Number,
   status: String
-}));
+}, { strict: false }));
 
 const Cart = mongoose.model('Cart', new mongoose.Schema({
-  userId: String,
+  userId: mongoose.Schema.Types.Mixed,
   items: Array
-}));
+}, { strict: false }));
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 app.get("/products", async (req, res) => {
-  const products = await Product.find();
-  res.json(products);
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: "Error" });
+  }
+});
+
+app.get("/products/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    let product = null;
+
+    if (!isNaN(Number(id))) {
+      product = await Product.findOne({ id: Number(id) });
+    }
+    
+    if (!product && mongoose.Types.ObjectId.isValid(id)) {
+      product = await Product.findById(id);
+    }
+
+    if (!product) return res.status(404).json({ error: "Product not found" });
+    res.json(product);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 app.post("/products", async (req, res) => {
-  const newProduct = new Product({ id: Date.now(), ...req.body });
+  const prodData = { id: Date.now(), ...req.body };
+  const newProduct = new Product(prodData);
   await newProduct.save();
   res.json(newProduct);
 });
 
 app.put("/products/:id", async (req, res) => {
-  const product = await Product.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
-  res.json(product);
+    try {
+      const { id } = req.params;
+      let product = null;
+      
+      if (!isNaN(Number(id))) {
+          product = await Product.findOneAndUpdate({ id: Number(id) }, req.body, { new: true });
+      }
+      
+      if (!product && mongoose.Types.ObjectId.isValid(id)) {
+          product = await Product.findByIdAndUpdate(id, req.body, { new: true });
+      }
+      
+      res.json(product);
+    } catch (e) {
+      res.status(500).json({ error: "Update failed" });
+    }
 });
 
 app.delete("/products/:id", async (req, res) => {
-  await Product.findOneAndDelete({ id: req.params.id });
-  res.json({ success: true });
-});
+    try {
+        const { id } = req.params;
+        let result = null;
 
-app.post("/users", async (req, res) => {
-  const { email } = req.body;
-  const existingUser = await User.findOne({ email });
-  
-  if (existingUser) {
-    return res.status(400).json({ error: "Пользователь уже существует" });
-  }
-
-  const newUser = new User({
-    id: Date.now().toString(),
-    ...req.body,
-    createdAt: new Date().toISOString()
-  });
-  
-  await newUser.save();
-  res.json(newUser);
-});
-
-app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email, password });
-
-  if (!user) {
-    return res.status(400).json({ error: "Неверный логин или пароль" });
-  }
-  if (user.isBlocked) {
-    return res.status(403).json({ error: "Вы были заблокированы" });
-  }
-  res.json(user);
+        if (!isNaN(Number(id))) {
+            result = await Product.findOneAndDelete({ id: Number(id) });
+        }
+        if (!result && mongoose.Types.ObjectId.isValid(id)) {
+            result = await Product.findByIdAndDelete(id);
+        }
+        
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: "Delete failed" });
+    }
 });
 
 app.get("/users", async (req, res) => {
-  const users = await User.find();
-  res.json(users);
+    try {
+        const users = await User.find();
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: "Error fetching users" });
+    }
 });
 
 app.get("/users/:id", async (req, res) => {
-  const user = await User.findOne({ id: req.params.id });
-  if (!user) return res.status(404).json({ error: "Пользователь не найден" });
-  res.json(user);
+    try {
+        const { id } = req.params;
+        let user = await User.findOne({ id: id }); 
+        if (!user && !isNaN(Number(id))) user = await User.findOne({ id: Number(id) });
+        if (!user && mongoose.Types.ObjectId.isValid(id)) user = await User.findById(id);
+        if (!user) return res.status(404).json({ error: "Not found" });
+        res.json(user);
+    } catch (e) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+app.post("/users", async (req, res) => {
+    const newUser = new User({ id: Date.now().toString(), ...req.body });
+    await newUser.save();
+    res.json(newUser);
 });
 
 app.put("/users/:id", async (req, res) => {
-  const user = await User.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
-  res.json(user);
+    try {
+        const { id } = req.params;
+        let user = await User.findOneAndUpdate({ id: id }, req.body, { new: true });
+        if (!user && !isNaN(Number(id))) user = await User.findOneAndUpdate({ id: Number(id) }, req.body, { new: true });
+        if (!user && mongoose.Types.ObjectId.isValid(id)) user = await User.findByIdAndUpdate(id, req.body, { new: true });
+        res.json(user);
+    } catch(e) {
+        res.status(500).json({ error: "Update failed" });
+    }
 });
 
-app.get("/reviews", async (req, res) => {
-  const reviews = await Review.find();
-  const users = await User.find();
-  
-  const enriched = reviews.map(r => {
-      const author = users.find(u => u.id === r.userId);
-      return author ? { ...r._doc, avatar: author.avatar, nickname: author.name } : r;
-  });
-  
-  res.json(enriched);
-});
-
-app.get("/reviews/product/:id", async (req, res) => {
-  const reviews = await Review.find({ productId: req.params.id });
-  const users = await User.find();
-  
-  const enriched = reviews.map(r => {
-      const author = users.find(u => u.id === r.userId);
-      return author ? { ...r._doc, avatar: author.avatar, nickname: author.name } : r;
-  });
-  
-  res.json(enriched);
-});
-
-app.post("/reviews", async (req, res) => {
-  const newReview = new Review({ id: Date.now(), ...req.body });
-  await newReview.save();
-  res.json(newReview);
-});
-
-app.get("/cart/:userId", async (req, res) => {
-  const cart = await Cart.findOne({ userId: req.params.userId });
-  res.json(cart ? cart.items : []);
-});
-
-app.post("/cart/:userId", async (req, res) => {
-  const { items } = req.body;
-  let cart = await Cart.findOne({ userId: req.params.userId });
-  
-  if (cart) {
-    cart.items = items;
-    await cart.save();
-  } else {
-    cart = new Cart({ userId: req.params.userId, items });
-    await cart.save();
-  }
-  res.json({ success: true, items });
-});
-
-app.get("/orders/:userId", async (req, res) => {
-  const orders = await Order.find({ userId: req.params.userId });
-  res.json(orders);
+app.post("/login", async (req, res) => {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email, password });
+    if (!user) return res.status(400).json({ error: "Invalid credentials" });
+    res.json(user);
 });
 
 app.get("/admin/orders", async (req, res) => {
-  const orders = await Order.find();
-  res.json(orders);
+    try {
+        const orders = await Order.find();
+        res.json(orders);
+    } catch (err) {
+        res.status(500).json({ error: "Error fetching orders" });
+    }
 });
 
 app.put("/admin/orders/:id", async (req, res) => {
-  const order = await Order.findOneAndUpdate({ id: req.params.id }, { status: req.body.status }, { new: true });
-  res.json(order);
+    try {
+        const order = await Order.findOneAndUpdate({ id: Number(req.params.id) }, { status: req.body.status }, { new: true });
+        res.json(order);
+    } catch (e) {
+        res.status(500).json({ error: "Update failed" });
+    }
+});
+
+app.get("/orders/:userId", async (req, res) => {
+    const orders = await Order.find({ userId: req.params.userId });
+    res.json(orders);
 });
 
 app.post("/orders", async (req, res) => {
-  const { userId, items, total, shippingInfo, date } = req.body;
+    try {
+        const { userId, items, total, shippingInfo } = req.body;
+        
+        for (const item of items) {
+            let filter = null;
 
-  for (const item of items) {
-    const product = await Product.findOne({ id: item.id });
-    if (product) {
-        if (product.quantity < item.quantity) {
-            return res.status(400).json({ error: `Товара "${item.name}" не хватает на складе` });
+            if (item.id && !isNaN(Number(item.id))) {
+                filter = { id: Number(item.id) };
+            } else if (mongoose.Types.ObjectId.isValid(item.id)) {
+                filter = { _id: item.id };
+            }
+
+            if (filter) {
+                await Product.findOneAndUpdate(filter, { $inc: { quantity: -item.quantity } });
+            }
         }
-        product.quantity -= item.quantity;
-        await product.save();
+
+        const order = new Order({ 
+            id: Date.now(), 
+            userId, 
+            items, 
+            total, 
+            shippingInfo, 
+            status: "processing", 
+            date: Date.now() 
+        });
+        
+        await order.save();
+        await Cart.findOneAndUpdate({ userId }, { items: [] });
+        
+        res.json(order);
+    } catch (err) {
+        console.error("Order error:", err);
+        res.status(500).json({ error: "Failed to create order" });
     }
-  }
+});
 
-  const newOrder = new Order({
-    id: Date.now(),
-    userId,
-    items,
-    total,
-    shippingInfo,
-    date: date || Date.now(),
-    status: "processing"
-  });
+app.get("/reviews", async (req, res) => {
+    const reviews = await Review.find();
+    const users = await User.find();
+    const enriched = reviews.map(r => {
+        const author = users.find(u => String(u.id) === String(r.userId) || String(u._id) === String(r.userId));
+        return { ...r.toObject(), avatar: author ? (author.avatar || DEFAULT_AVATAR) : DEFAULT_AVATAR, nickname: author ? author.name : "Гость" };
+    });
+    res.json(enriched);
+});
 
-  await newOrder.save();
+app.get("/reviews/product/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const reviews = await Review.find({ $or: [{ productId: Number(id) }, { productId: String(id) }] });
+        const users = await User.find();
+        const enriched = reviews.map(r => {
+            const author = users.find(u => String(u.id) === String(r.userId) || String(u._id) === String(r.userId));
+            return { ...r.toObject(), avatar: author ? (author.avatar || DEFAULT_AVATAR) : DEFAULT_AVATAR, nickname: author ? author.name : "Гость" };
+        });
+        res.json(enriched);
+    } catch (err) { res.json([]); }
+});
 
-  await Cart.findOneAndUpdate({ userId }, { items: [] });
+app.post("/reviews", async (req, res) => {
+    try {
+        const newReview = new Review({ id: Date.now(), ...req.body });
+        await newReview.save();
+        let author = await User.findOne({ id: newReview.userId });
+        if (!author && mongoose.Types.ObjectId.isValid(newReview.userId)) author = await User.findById(newReview.userId);
+        res.json({ ...newReview.toObject(), avatar: author ? (author.avatar || DEFAULT_AVATAR) : DEFAULT_AVATAR, nickname: author?.name || "Гость" });
+    } catch (err) { res.status(500).json({ error: "Error saving review" }); }
+});
 
-  res.json(newOrder);
+app.delete("/reviews/:id", async (req, res) => {
+    await Review.findOneAndDelete({ id: Number(req.params.id) });
+    res.json({ success: true });
+});
+
+app.get("/cart/:userId", async (req, res) => {
+    const cart = await Cart.findOne({ userId: req.params.userId });
+    res.json(cart ? cart.items : []);
+});
+
+app.post("/cart/:userId", async (req, res) => {
+    const { items } = req.body;
+    let cart = await Cart.findOne({ userId: req.params.userId });
+    if (cart) { cart.items = items; await cart.save(); }
+    else { await new Cart({ userId: req.params.userId, items }).save(); }
+    res.json({ success: true });
 });
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

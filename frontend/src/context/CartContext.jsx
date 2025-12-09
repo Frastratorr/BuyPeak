@@ -20,6 +20,20 @@ export function CartProvider({ children }) {
         }
     }, [user]);
 
+    useEffect(() => {
+    if (user) {
+      if (cart.length > 0) {
+          fetch(`http://localhost:5000/cart/${user.id}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ items: cart }),
+          }).catch(console.error);
+      }
+    } else {
+      localStorage.setItem("guest_cart", JSON.stringify(cart));
+    }
+  }, [cart, user]);
+
     const saveToServer = (newCartItems) => {
         if (!user) return;
 

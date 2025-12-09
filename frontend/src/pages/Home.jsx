@@ -10,7 +10,6 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
-import catalogPreview from '../assets/img/products/catalog-preview.jpg';
 import { useEffect, useState } from 'react';
 
 export default function Home() {
@@ -27,6 +26,7 @@ export default function Home() {
     .catch(console.error);
   }, [])
 
+  const catalogPreview = "https://res.cloudinary.com/dg2pcfylr/image/upload/v1765308207/catalog-preview_e3l46g.jpg"
   const news = [
     { title: 'Новая коллекция!', date: '01.12', desc: 'Уже в продаже во всех категориях. Успейте купить новинки сезона по старым ценам.' },
     { title: 'Бесплатная доставка', date: '30.11', desc: 'При заказе от 100€ по всей Европе доставка осуществляется за наш счет.' },

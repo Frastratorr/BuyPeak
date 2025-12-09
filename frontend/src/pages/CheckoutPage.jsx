@@ -82,7 +82,6 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!formData.address || !formData.city || !formData.phone || !formData.country) {
         return showNotification("Заполните все поля адреса", "warning");
     }
@@ -91,13 +90,20 @@ export default function CheckoutPage() {
     }
 
     const fullPhoneNumber = `${phoneCode} ${formData.phone}`;
+    const sanitizedItems = cart.map(item => ({
+        id: item.id || item._id,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+        image: item.image || item.img
+    }));
 
     const newOrder = {
-      userId: user?.id,
-      items: cart,
+      userId: user?.id || "guest",
+      items: sanitizedItems,
       total: finalPrice,
       shippingInfo: {
-        country: formData.country, // ИСПРАВЛЕНО: было просто country
+        country: formData.country,
         address: `${formData.city}, ${formData.address}`,
         phone: fullPhoneNumber,
         name: formData.fullName
@@ -112,15 +118,23 @@ export default function CheckoutPage() {
         body: JSON.stringify(newOrder)
       });
 
-      if (!res.ok) throw new Error("Ошибка заказа");
+      const data = await res.json();
+
+      if (!res.ok) {
+          throw new Error(data.error || "Ошибка при создании заказа");
+      }
 
       clearCart();
       showNotification("Заказ успешно оформлен!", "success");
-      navigate(`/profile/${user?.id}`);
+      if (user && user.id) {
+          navigate(`/profile/${user.id}`);
+      } else {
+          navigate("/");
+      }
 
     } catch (err) {
       console.error(err);
-      showNotification("Не удалось оформить заказ", "error");
+      showNotification(err.message, "error");
     }
   };
 
@@ -257,7 +271,7 @@ export default function CheckoutPage() {
                 
                 <Stack spacing={1.5} sx={{ mb: 2 }}>
                     {cart.map(item => (
-                        <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                        <Box key={item.id || item._id} sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                             <Typography noWrap sx={{ maxWidth: '70%' }}>{item.name} x{item.quantity}</Typography>
                             <Typography fontWeight="bold">
                                 {((Number(String(item.price).replace(/[^0-9.]/g, '')) || 0) * item.quantity).toFixed(2)}$

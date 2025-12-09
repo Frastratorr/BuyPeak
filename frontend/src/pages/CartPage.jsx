@@ -20,9 +20,11 @@ import {
   ShoppingCartCheckout, 
   ArrowBack 
 } from "@mui/icons-material";
+import { AuthContext } from "../context/AuthContext";
 
 export default function CartPage() {
   const { cart, removeFromCart, clearCart, updateQuantity } = useContext(CartContext);
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const total = cart.reduce((sum, item) => {
@@ -71,88 +73,108 @@ export default function CartPage() {
   }
 
   return (
-    <Box sx={{ maxWidth: "xl", margin: "0 auto", p: { xs: 2, md: 4 } }}>
-      <Typography variant="h4" fontWeight="bold" sx={{ mb: 4 }}>
+    <Box sx={{ maxWidth: "xl", margin: "0 auto", p: { xs: 2, md: 6 } }}>
+      <Typography variant="h4" fontWeight="bold" sx={{ mb: 5, textAlign: "center" }}>
         Корзина ({cart.reduce((acc, item) => acc + item.quantity, 0)})
       </Typography>
 
-      <Grid container spacing={4}>
-        <Grid size={{ xs: 12, md: 8 }}>
-          <Stack spacing={2}>
-            {cart.map((item) => {
+      <Grid container spacing={4} justifyContent="space-between">
+        
+        <Grid item xs={12} md={7}>
+          <Stack spacing={3}>
+            {cart.map((item, index) => {
               const priceStr = item.price ? String(item.price).replace(/[^0-9.]/g, '') : "0";
               const priceNum = Number(priceStr) || 0;
-              
-              return (
-                <Card 
-                  key={item.id} 
-                  sx={{ 
-                    display: "flex", 
-                    p: 3, 
-                    borderRadius: 3, 
-                    boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
-                    width: "95%", 
-                    alignItems: "center"
-                  }}
-                >
-                  <CardMedia
-                    component="img"
-                    sx={{ width: 120, height: 120, borderRadius: 2, objectFit: "cover" }}
-                    image={item.img || item.image || "https://placehold.co/120"}
-                    alt={item.name}
-                  />
+              const uniqueKey = item.id || item._id || index;
+              const itemId = item.id || item._id; 
 
-                  <Box sx={{ display: "flex", flexDirection: "column", flex: 1, ml: 3, justifyContent: "space-between", minHeight: 120 }}>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <Box>
-                        <Typography variant="h6" fontWeight="bold" sx={{ fontSize: "1.2rem" }}>
+              return (
+                <Box key={uniqueKey}>
+                  <Card 
+                    sx={{ 
+                      display: "flex", 
+                      alignItems: "center",
+                      p: 2, 
+                      borderRadius: 4, 
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+                      width: "100%",
+                      transition: "0.3s",
+                      "&:hover": { boxShadow: "0 8px 25px rgba(0,0,0,0.1)" }
+                    }}
+                  >
+                    <CardMedia
+                      component="img"
+                      sx={{ 
+                        width: 100, 
+                        height: 100, 
+                        borderRadius: 3, 
+                        objectFit: "contain",
+                        bgcolor: "#f9f9f9" 
+                      }}
+                      image={item.img || item.image || "https://placehold.co/120"}
+                      alt={item.name}
+                    />
+
+                    <Box sx={{ 
+                        display: "flex", 
+                        flex: 1, 
+                        ml: 3, 
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        flexWrap: "wrap",
+                        gap: 2
+                    }}>
+                      
+                      <Box sx={{ minWidth: "150px" }}>
+                        <Typography variant="h6" fontWeight="bold" sx={{ fontSize: "1.1rem", lineHeight: 1.2, mb: 0.5 }}>
                           {item.name}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Код товара: {item.id}
+                        <Typography variant="caption" color="text.secondary">
+                          Артикул: {itemId || "—"}
                         </Typography>
                       </Box>
-                      <IconButton onClick={() => removeFromCart(item.id)} color="error">
-                        <DeleteOutline />
-                      </IconButton>
-                    </Box>
 
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: "auto" }}>
                       <Box 
                         sx={{ 
                           display: "flex", 
                           alignItems: "center", 
-                          bgcolor: "#f5f5f5", 
-                          borderRadius: "12px",
-                          padding: "4px 8px"
+                          bgcolor: "#f0f4f8", 
+                          borderRadius: "50px",
+                          padding: "4px 6px"
                         }}
                       >
                         <IconButton 
                           size="small" 
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)} 
+                          onClick={() => updateQuantity(itemId, Math.max(1, item.quantity - 1))} 
                           disabled={item.quantity <= 1}
+                          sx={{ bgcolor: "white", boxShadow: 1, width: 32, height: 32 }}
                         >
                           <Remove fontSize="small" />
                         </IconButton>
                         
-                        <Typography sx={{ mx: 2, fontWeight: "bold", fontSize: "16px" }}>
+                        <Typography sx={{ mx: 2, fontWeight: "bold", fontSize: "16px", minWidth: "20px", textAlign: "center" }}>
                           {item.quantity}
                         </Typography>
                         
                         <IconButton 
                           size="small" 
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(itemId, item.quantity + 1)}
+                          sx={{ bgcolor: "white", boxShadow: 1, width: 32, height: 32 }}
                         >
                           <Add fontSize="small" />
                         </IconButton>
                       </Box>
 
-                      <Typography variant="h6" fontWeight="bold" color="primary" sx={{ fontSize: "1.3rem" }}>
+                      <Typography variant="h6" fontWeight="bold" color="primary" sx={{ minWidth: "80px", textAlign: "right" }}>
                         ${(priceNum * item.quantity).toFixed(2)}
                       </Typography>
+
+                      <IconButton onClick={() => removeFromCart(itemId)} color="error" sx={{ opacity: 0.7, '&:hover': { opacity: 1, bgcolor: "#ffebee" } }}>
+                        <DeleteOutline />
+                      </IconButton>
                     </Box>
-                  </Box>
-                </Card>
+                  </Card>
+                </Box>
               );
             })}
           </Stack>
@@ -162,30 +184,32 @@ export default function CartPage() {
             color="error" 
             startIcon={<DeleteOutline />} 
             onClick={clearCart} 
-            sx={{ mt: 3 }}
+            sx={{ mt: 3, fontWeight: "bold" }}
           >
             Очистить корзину
           </Button>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid item xs={12} md={4}>
           <Paper 
-            elevation={3} 
+            elevation={0} 
             sx={{ 
               p: 4,
               borderRadius: 4, 
+              border: "1px solid #eee",
               position: "sticky", 
-              top: 100 
+              top: 100,
+              bgcolor: "#fafafa" 
             }}
           >
-            <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>Детали заказа</Typography>
+            <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>Ваш заказ</Typography>
             
             <Stack spacing={2} sx={{ mb: 3 }}>
               <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                 <Typography color="text.secondary" sx={{ fontSize: "1.1rem" }}>
                   Товары ({cart.length})
                 </Typography>
-                <Typography fontWeight="500" sx={{ fontSize: "1.1rem" }}>
+                <Typography fontWeight="600" sx={{ fontSize: "1.1rem" }}>
                   ${total.toFixed(2)}
                 </Typography>
               </Box>
@@ -198,7 +222,7 @@ export default function CartPage() {
                     Бесплатно
                   </Typography>
                 ) : (
-                  <Typography fontWeight="500" sx={{ fontSize: "1.1rem" }}>
+                  <Typography fontWeight="600" sx={{ fontSize: "1.1rem" }}>
                     ${deliveryCost.toFixed(2)}
                   </Typography>
                 )}
@@ -207,9 +231,9 @@ export default function CartPage() {
 
             <Divider sx={{ mb: 3 }} />
 
-            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 4 }}>
-              <Typography variant="h5" fontWeight="bold">Итого</Typography>
-              <Typography variant="h4" fontWeight="bold" color="primary">
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 4, alignItems: "center" }}>
+              <Typography variant="h5" fontWeight="bold" color="#333">Итого</Typography>
+              <Typography variant="h3" fontWeight="bold" color="primary" sx={{ fontSize: "2rem" }}>
                 ${finalPrice.toFixed(2)}
               </Typography>
             </Box>
@@ -220,7 +244,13 @@ export default function CartPage() {
               variant="contained" 
               fullWidth 
               size="large" 
-              sx={{ borderRadius: "12px", height: "55px", fontSize: "18px", fontWeight: "bold" }}
+              sx={{ 
+                borderRadius: "16px", 
+                height: "60px", 
+                fontSize: "18px", 
+                fontWeight: "bold",
+                boxShadow: "0 8px 25px rgba(25, 118, 210, 0.3)"
+              }}
             >
               Перейти к оформлению
             </Button>

@@ -15,18 +15,18 @@ import {
 import { 
   Sort as SortIcon, 
   KeyboardArrowDown, 
-  ThumbUpAltOutlined
+  ThumbUpAltOutlined,
+  ThumbUp,
+  DeleteOutline
 } from "@mui/icons-material";
 
-export default function ReviewsBlock({ reviews }) {
+export default function ReviewsBlock({ reviews, onDelete, currentUser }) {
   const [sortOption, setSortOption] = useState("newest");
   const [anchorEl, setAnchorEl] = useState(null);
+  const [likedReviews, setLikedReviews] = useState({}); 
   const open = Boolean(anchorEl);
 
-  const handleClickSort = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
+  const handleClickSort = (event) => setAnchorEl(event.currentTarget);
   const handleCloseSort = (option) => {
     if (option) setSortOption(option);
     setAnchorEl(null);
@@ -65,6 +65,13 @@ export default function ReviewsBlock({ reviews }) {
     return { sx: { bgcolor: color } };
   }
 
+  const handleLike = (id) => {
+    setLikedReviews(prev => ({
+        ...prev,
+        [id]: !prev[id]
+    }));
+  };
+
   return (
     <Box>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
@@ -97,10 +104,7 @@ export default function ReviewsBlock({ reviews }) {
               anchorEl={anchorEl}
               open={open}
               onClose={() => handleCloseSort(null)}
-              PaperProps={{ 
-                elevation: 3, 
-                sx: { borderRadius: 3, mt: 1, minWidth: 200 } 
-              }}
+              PaperProps={{ elevation: 3, sx: { borderRadius: 3, mt: 1, minWidth: 200 } }}
             >
               <MenuItem onClick={() => handleCloseSort("newest")} selected={sortOption === "newest"}>Сначала новые</MenuItem>
               <MenuItem onClick={() => handleCloseSort("oldest")} selected={sortOption === "oldest"}>Сначала старые</MenuItem>
@@ -119,69 +123,82 @@ export default function ReviewsBlock({ reviews }) {
             </Typography>
           </Box>
         ) : (
-          sortedReviews.map((review) => (
-            <Paper 
-                key={review.id} 
-                elevation={0}
-                sx={{ 
-                    p: 2, 
-                    borderRadius: 3, 
-                    bgcolor: "#fff", 
-                    border: "1px solid #f0f0f0",
-                    transition: "0.2s",
-                    '&:hover': { boxShadow: "0 4px 12px rgba(0,0,0,0.05)", borderColor: "transparent", transform: "translateY(-2px)" }
-                }}
-            >
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1 }}>
-                
-                <Box 
-                    component={Link}
-                    to={`/profile/${review.userId}`}
-                    sx={{ 
-                        display: "flex", 
-                        gap: 2, 
-                        alignItems: "center",
-                        textDecoration: "none", 
-                        color: "inherit",
-                        cursor: "pointer",
-                        '&:hover .nickname': { color: "#1976d2", textDecoration: "underline" }
-                    }}
-                >
-                    {review.avatar && review.avatar.includes("base64") ? (
-                        <Avatar src={review.avatar} />
-                    ) : (
-                        <Avatar {...stringAvatar(review.nickname)}>
-                            {review.nickname ? review.nickname[0].toUpperCase() : "G"}
-                        </Avatar>
-                    )}
+          sortedReviews.map((review) => {
+            const isMyReview = currentUser && String(currentUser.id) === String(review.userId);
+            const displayName = isMyReview ? currentUser.name : (review.nickname || "Пользователь");
+            const displayAvatar = isMyReview ? currentUser.avatar : review.avatar;
+            const isLiked = likedReviews[review.id];
+
+            return (
+              <Paper 
+                  key={review.id} 
+                  elevation={0}
+                  sx={{ 
+                      p: 2, 
+                      borderRadius: 3, 
+                      bgcolor: "#fff", 
+                      border: "1px solid #f0f0f0",
+                      transition: "0.2s",
+                      '&:hover': { boxShadow: "0 4px 12px rgba(0,0,0,0.05)", borderColor: "transparent", transform: "translateY(-2px)" }
+                  }}
+              >
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1 }}>
+                  <Box 
+                      component={Link}
+                      to={`/profile/${review.userId}`}
+                      sx={{ 
+                          display: "flex", gap: 2, alignItems: "center", textDecoration: "none", color: "inherit", cursor: "pointer",
+                          '&:hover .nickname': { color: "#1976d2", textDecoration: "underline" }
+                      }}
+                  >
+                      {displayAvatar ? (
+                          <Avatar src={displayAvatar} />
+                      ) : (
+                          <Avatar {...stringAvatar(displayName)}>
+                              {displayName ? displayName[0].toUpperCase() : "U"}
+                          </Avatar>
+                      )}
+                      
+                      <Box>
+                          <Typography variant="subtitle2" fontWeight="bold" className="nickname" sx={{ transition: "0.2s" }}>
+                              {displayName}
+                          </Typography>
+                          <Rating value={review.rating} readOnly size="small" />
+                      </Box>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="caption" color="text.secondary">
+                        {new Date(review.date).toLocaleDateString()}
+                    </Typography>
                     
-                    <Box>
-                        <Typography variant="subtitle2" fontWeight="bold" className="nickname" sx={{ transition: "0.2s" }}>
-                            {review.nickname || "Аноним"}
-                        </Typography>
-                        <Rating value={review.rating} readOnly size="small" />
-                    </Box>
+                    {isMyReview && (
+                        <IconButton size="small" onClick={() => onDelete(review.id)} color="error" title="Удалить отзыв">
+                            <DeleteOutline fontSize="small" />
+                        </IconButton>
+                    )}
+                  </Box>
                 </Box>
-                
-                <Typography variant="caption" color="text.secondary">
-                    {new Date(review.date).toLocaleDateString()}
+
+                <Typography variant="body2" sx={{ lineHeight: 1.6, color: "#333", mb: 2, mt: 1 }}>
+                  {review.text}
                 </Typography>
-              </Box>
 
-              <Typography variant="body2" sx={{ lineHeight: 1.6, color: "#333", mb: 2, mt: 1 }}>
-                {review.text}
-              </Typography>
-
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                 <IconButton size="small" sx={{ color: "#aaa", '&:hover': { color: "#1976d2" } }}>
-                    <ThumbUpAltOutlined fontSize="small" />
-                 </IconButton>
-                 <Typography variant="caption" color="text.secondary" sx={{ cursor: "pointer" }}>
-                    Полезно
-                 </Typography>
-              </Box>
-            </Paper>
-          ))
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                   <IconButton 
+                        size="small" 
+                        onClick={() => handleLike(review.id)}
+                        color={isLiked ? "primary" : "default"}
+                   >
+                      {isLiked ? <ThumbUp fontSize="small" /> : <ThumbUpAltOutlined fontSize="small" />}
+                   </IconButton>
+                   <Typography variant="caption" color={isLiked ? "primary" : "text.secondary"} sx={{ cursor: "pointer", fontWeight: isLiked ? 'bold' : 'normal' }}>
+                      {isLiked ? "Вам понравилось" : "Полезно"}
+                   </Typography>
+                </Box>
+              </Paper>
+            );
+          })
         )}
       </Stack>
     </Box>
