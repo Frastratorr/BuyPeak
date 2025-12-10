@@ -9,8 +9,6 @@ const app = express();
 const PORT = 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/shop";
 const DEFAULT_AVATAR = "https://res.cloudinary.com/dg2pcfylr/image/upload/v1765308214/default-avatar_e3ep28.jpg";
-const API_URL = import.meta.env.VITE_API_URL;
-fetch(`${API_URL}/products`)
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
