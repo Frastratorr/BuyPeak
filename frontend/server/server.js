@@ -9,6 +9,8 @@ const app = express();
 const PORT = 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/shop";
 const DEFAULT_AVATAR = "https://res.cloudinary.com/dg2pcfylr/image/upload/v1765308214/default-avatar_e3ep28.jpg";
+const API_URL = import.meta.env.VITE_API_URL;
+fetch(`${API_URL}/products`)
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ MongoDB Connected"))
@@ -62,6 +64,44 @@ const Cart = mongoose.model('Cart', new mongoose.Schema({
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'BuyPeak API v3',
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
+
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy',
+    database: 'not connected',
+    server: 'running',
+    uptime: process.uptime()
+  });
+});
+
+app.get('/products', (req, res) => {
+  const mockProducts = [
+    { id: 1, name: "iPhone 15", price: 999, quantity: 10, image: "https://via.placeholder.com/300" },
+    { id: 2, name: "MacBook Pro", price: 1999, quantity: 5, image: "https://via.placeholder.com/300" },
+    { id: 3, name: "AirPods Pro", price: 249, quantity: 20, image: "https://via.placeholder.com/300" }
+  ];
+  res.json(mockProducts);
+});
+
+app.get('/test', (req, res) => {
+  res.json({ 
+    test: 'success',
+    env: {
+      port: PORT,
+      node_env: process.env.NODE_ENV,
+      has_mongo_uri: !!process.env.MONGO_URI
+    }
+  });
+});
 
 app.get("/products", async (req, res) => {
   try {
@@ -296,4 +336,8 @@ app.post("/cart/:userId", async (req, res) => {
     res.json({ success: true });
 });
 
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🌐 Test URL: https://buypeak.onrender.com/`);
+  console.log(`📊 Health check: https://buypeak.onrender.com/health`);
+  console.log(`Server running on http://localhost:${PORT}`)
+});
