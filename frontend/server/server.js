@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/shop";
 const DEFAULT_AVATAR = "https://res.cloudinary.com/dg2pcfylr/image/upload/v1765308214/default-avatar_e3ep28.jpg";
 
@@ -79,15 +79,6 @@ app.get('/health', (req, res) => {
     server: 'running',
     uptime: process.uptime()
   });
-});
-
-app.get('/products', (req, res) => {
-  const mockProducts = [
-    { id: 1, name: "iPhone 15", price: 999, quantity: 10, image: "https://via.placeholder.com/300" },
-    { id: 2, name: "MacBook Pro", price: 1999, quantity: 5, image: "https://via.placeholder.com/300" },
-    { id: 3, name: "AirPods Pro", price: 249, quantity: 20, image: "https://via.placeholder.com/300" }
-  ];
-  res.json(mockProducts);
 });
 
 app.get('/test', (req, res) => {
