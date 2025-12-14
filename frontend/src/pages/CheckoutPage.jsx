@@ -39,8 +39,8 @@ const countryCodes = [
 ];
 
 export default function CheckoutPage() {
-  // 🔥 ВАЖНО: Добавили определение URL API
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+  // 🔥 ЖЕСТКАЯ ССЫЛКА НА СЕРВЕР (Чтобы убрать NetworkError)
+  const API_URL = "https://buypeak.onrender.com";
 
   const { cart, clearCart } = useContext(CartContext);
   const { user } = useContext(AuthContext);
@@ -95,9 +95,9 @@ export default function CheckoutPage() {
 
     const fullPhoneNumber = `${phoneCode} ${formData.phone}`;
 
-    // 🔥 Очистка данных перед отправкой (чтобы ID были правильные)
+    // 🔥 Очистка данных перед отправкой (Гарантируем правильные ID)
     const sanitizedItems = cart.map(item => ({
-        id: item.id || item._id, // Берем ID или _id
+        id: item.id || item._id, // Берем любой доступный ID
         name: item.name,
         quantity: item.quantity,
         price: item.price,
@@ -105,7 +105,7 @@ export default function CheckoutPage() {
     }));
 
     const newOrder = {
-      userId: user?.id,
+      userId: user?.id || "guest",
       items: sanitizedItems,
       total: finalPrice,
       shippingInfo: {
@@ -118,28 +118,31 @@ export default function CheckoutPage() {
     };
 
     try {
-      // 🔥 ИСПРАВЛЕНО: Используем API_URL вместо localhost
+      // 🔥 Используем жесткую ссылку
       const res = await fetch(`${API_URL}/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newOrder)
       });
 
-      // Читаем ответ сервера, чтобы понять причину ошибки, если она есть
       const data = await res.json();
 
       if (!res.ok) {
-          throw new Error(data.error || "Ошибка заказа");
+          throw new Error(data.error || "Ошибка при создании заказа");
       }
 
       clearCart();
       showNotification("Заказ успешно оформлен!", "success");
-      navigate(`/profile/${user?.id}`);
+      
+      if (user && user.id) {
+          navigate(`/profile/${user.id}`);
+      } else {
+          navigate("/");
+      }
 
     } catch (err) {
       console.error(err);
-      // Показываем реальный текст ошибки
-      showNotification(err.message || "Не удалось оформить заказ", "error");
+      showNotification(`Ошибка: ${err.message}`, "error");
     }
   };
 
@@ -276,7 +279,7 @@ export default function CheckoutPage() {
                 
                 <Stack spacing={1.5} sx={{ mb: 2 }}>
                     {cart.map(item => (
-                        <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                        <Box key={item.id || item._id} sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                             <Typography noWrap sx={{ maxWidth: '70%' }}>{item.name} x{item.quantity}</Typography>
                             <Typography fontWeight="bold">
                                 {((Number(String(item.price).replace(/[^0-9.]/g, '')) || 0) * item.quantity).toFixed(2)}$

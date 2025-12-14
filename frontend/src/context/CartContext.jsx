@@ -5,7 +5,7 @@ import { useNotification } from "../context/NotificationContext";
 export const CartContext = createContext();
 
 export function CartProvider({ children }) {
-    // 🔥 ЖЕСТКО ПРОПИСЫВАЕМ ССЫЛКУ
+    // 🔥 ЖЕСТКАЯ ССЫЛКА НА СЕРВЕР
     const API_URL = "https://buypeak.onrender.com";
     
     const { user } = useContext(AuthContext);
@@ -14,6 +14,7 @@ export function CartProvider({ children }) {
 
     useEffect(() => {
         if (user) {
+            // Загрузка корзины с сервера
             fetch(`${API_URL}/cart/${user.id}`)
                 .then(res => res.json())
                 .then(data => {
@@ -21,6 +22,7 @@ export function CartProvider({ children }) {
                 })
                 .catch(err => console.error("Ошибка загрузки корзины:", err));
         } else {
+            // Загрузка из localStorage для гостя
             const localCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
             setCart(localCart);
         }
@@ -28,12 +30,14 @@ export function CartProvider({ children }) {
 
     const saveCartState = (newCartItems) => {
         if (user) {
+            // Сохранение на сервер
             fetch(`${API_URL}/cart/${user.id}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ items: newCartItems }),
             }).catch(err => console.error("Ошибка сохранения корзины:", err));
         } else {
+            // Сохранение в localStorage
             localStorage.setItem("guest_cart", JSON.stringify(newCartItems));
         }
     };
@@ -42,11 +46,16 @@ export function CartProvider({ children }) {
         setCart((prev) => {
             const existing = prev.find((item) => item.id === product.id);
             let newCart;
+
             if (existing) {
-                newCart = prev.map((item) => item.id === product.id ? {...item, quantity: item.quantity + (product.quantity || 1) } : item);
+                newCart = prev.map((item) => 
+                    item.id === product.id
+                    ? {...item, quantity: item.quantity + (product.quantity || 1) } : item
+                );
             } else {
                 newCart = [...prev, { ...product, quantity: product.quantity || 1}];
             }
+            
             saveCartState(newCart);
             showNotification(`Товар "${product.name || product.title}" добавлен в корзину!`, "success");
             return newCart;
@@ -55,7 +64,9 @@ export function CartProvider({ children }) {
 
     const updateQuantity = (id, qty) => {
         setCart((prev) => {
-            const newCart = prev.map((item) => item.id === id ? { ...item, quantity: Math.max(1, qty) } : item);
+            const newCart = prev.map((item) =>
+                item.id === id ? { ...item, quantity: Math.max(1, qty) } : item
+            );
             saveCartState(newCart);
             return newCart;
         });
@@ -73,6 +84,7 @@ export function CartProvider({ children }) {
     const clearCart = () => {
         setCart([]);
         saveCartState([]);
+        // showNotification("Корзина очищена", "info"); // Можно раскомментировать, если нужно уведомление
     };
 
     return (
