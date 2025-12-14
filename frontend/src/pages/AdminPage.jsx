@@ -15,7 +15,9 @@ import {
 } from "@mui/icons-material";
 
 export default function AdminPage() {
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
+  // 🔥 ВАЖНО: Используем переменную окружения
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
   const { user } = useContext(AuthContext);
   const { showNotification } = useNotification();
   const navigate = useNavigate();
@@ -45,6 +47,7 @@ export default function AdminPage() {
   }, [user]);
 
   const fetchProducts = () => {
+    // 🔥 Исправлен URL
     fetch(`${API_URL}/products`)
       .then(res => { if(!res.ok) throw new Error(); return res.json(); })
       .then(data => setProducts(Array.isArray(data) ? data : []))
@@ -52,6 +55,7 @@ export default function AdminPage() {
   };
 
   const fetchOrders = () => {
+    // 🔥 Исправлен URL
     fetch(`${API_URL}/admin/orders`)
       .then(res => { if(!res.ok) throw new Error(); return res.json(); })
       .then(data => setOrders(Array.isArray(data) ? data.reverse() : []))
@@ -59,6 +63,7 @@ export default function AdminPage() {
   };
 
   const fetchUsers = () => {
+    // 🔥 Исправлен URL
     fetch(`${API_URL}/users`)
       .then(res => { if(!res.ok) throw new Error(); return res.json(); })
       .then(data => setUsersList(Array.isArray(data) ? data : []))
@@ -90,8 +95,7 @@ export default function AdminPage() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const YOUR_PRESET = "ml_defaultS"; 
-
+    const YOUR_PRESET = "ml_default"; // Убедись, что это Unsigned preset!
     const YOUR_CLOUD_NAME = "dg2pcfylr"; 
 
     formData.append("upload_preset", YOUR_PRESET); 
@@ -133,7 +137,7 @@ export default function AdminPage() {
     const id = editingProduct ? (editingProduct.id || editingProduct._id) : null;
     const url = id 
         ? `${API_URL}/products/${id}`
-        : "${API_URL}/products";
+        : `${API_URL}/products`;
     
     const method = editingProduct ? "PUT" : "POST";
 
@@ -372,54 +376,25 @@ export default function AdminPage() {
         <DialogTitle>{editingProduct ? "Редактировать товар" : "Новый товар"}</DialogTitle>
         <DialogContent>
             <Stack spacing={3} mt={1}>
-                
                 <Box sx={{ textAlign: 'center' }}>
-                    {productForm.image && (
-                        <CardMedia 
-                            component="img" 
-                            image={productForm.image} 
-                            sx={{ width: 150, height: 150, objectFit: 'contain', mx: 'auto', mb: 2, borderRadius: 2 }} 
-                        />
-                    )}
-                    
-                    <Button 
-                        variant="outlined" 
-                        component="label" 
-                        startIcon={uploadingImage ? <CircularProgress size={20} /> : <UploadIcon />}
-                        disabled={uploadingImage}
-                    >
+                    {productForm.image && <CardMedia component="img" image={productForm.image} sx={{ width: 120, height: 120, objectFit: 'contain', mx: 'auto', mb: 2, borderRadius: 2 }} />}
+                    <Button variant="outlined" component="label" startIcon={uploadingImage ? <CircularProgress size={20} /> : <UploadIcon />} disabled={uploadingImage}>
                         {uploadingImage ? "Загрузка..." : "Загрузить фото"}
                         <input type="file" hidden accept="image/*" onChange={handleImageUpload} />
                     </Button>
                 </Box>
-
                 <TextField label="Название" fullWidth value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} />
-                
                 <Box sx={{ display: 'flex', gap: 2 }}>
                     <TextField label="Цена ($)" type="number" fullWidth value={productForm.price} onChange={e => setProductForm({...productForm, price: e.target.value})} />
                     <TextField label="Количество" type="number" fullWidth value={productForm.quantity} onChange={e => setProductForm({...productForm, quantity: e.target.value})} />
                 </Box>
-                
-                <TextField 
-                    label="Или прямая ссылка (URL)" fullWidth 
-                    value={productForm.image} 
-                    onChange={e => setProductForm({...productForm, image: e.target.value})} 
-                    disabled={uploadingImage}
-                />
-                
+                <TextField label="Или ссылка на фото (URL)" fullWidth value={productForm.image} onChange={e => setProductForm({...productForm, image: e.target.value})} disabled={uploadingImage} />
                 <TextField label="Описание" multiline rows={3} fullWidth value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})} />
             </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
             <Button onClick={() => setOpenProductModal(false)}>Отмена</Button>
-            <Button 
-                variant="contained" 
-                startIcon={<SaveIcon />} 
-                onClick={handleSaveProduct}
-                disabled={uploadingImage}
-            >
-                Сохранить
-            </Button>
+            <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveProduct} disabled={uploadingImage}>Сохранить</Button>
         </DialogActions>
       </Dialog>
     </Box>
