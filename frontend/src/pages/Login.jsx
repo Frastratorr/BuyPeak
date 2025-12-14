@@ -1,23 +1,15 @@
 import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { 
-  Box, 
-  TextField, 
-  Button, 
-  Typography, 
-  Alert, 
-  Paper, 
-  Avatar, 
-  InputAdornment,
-  CircularProgress
-} from "@mui/material";
+import { Box, TextField, Button, Typography, Alert, Paper, Avatar, InputAdornment, CircularProgress } from "@mui/material";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import EmailIcon from '@mui/icons-material/Email';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 
 export default function Login() {
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
+  // 🔥 ЖЕСТКО ПРОПИСЫВАЕМ ССЫЛКУ (ЧТОБЫ НАВЕРНЯКА)
+  const API_URL = "https://buypeak.onrender.com"; 
+
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -51,95 +43,30 @@ export default function Login() {
       } else {
           navigate(`/profile/${data.id}`);
       }
-    } catch {
+    } catch (e) {
+      console.error(e);
       setError("Ошибка соединения с сервером");
       setLoading(false);
     }
   };
 
   return (
-    <Box 
-      className="fade-in"
-      sx={{ 
-        minHeight: "80vh",
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "center"
-      }}
-    >
-      <Paper 
-        className="glass"
-        sx={{ 
-          p: 4, 
-          width: "100%", 
-          maxWidth: 400, 
-          borderRadius: 4, 
-          display: "flex", 
-          flexDirection: "column", 
-          alignItems: "center" 
-        }}
-      >
+    <Box className="fade-in" sx={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Paper className="glass" sx={{ p: 4, width: "100%", maxWidth: 400, borderRadius: 4, display: "flex", flexDirection: "column", alignItems: "center" }}>
         <Avatar sx={{ m: 1, bgcolor: "secondary.main", width: 56, height: 56 }}>
           <LockOutlinedIcon fontSize="large" />
         </Avatar>
-        
-        <Typography component="h1" variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
-          Вход в систему
-        </Typography>
-
+        <Typography component="h1" variant="h5" fontWeight="bold" sx={{ mb: 3 }}>Вход в систему</Typography>
         {error && <Alert severity="error" sx={{ width: "100%", mb: 2 }}>{error}</Alert>}
-
         <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            label="Email адрес"
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <EmailIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            label="Пароль"
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <VpnKeyIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
-
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            size="large"
-            disabled={loading}
-            sx={{ mt: 3, mb: 2, borderRadius: 2, height: 50, fontWeight: "bold" }}
-          >
+          <TextField margin="normal" required fullWidth label="Email адрес" type="email" value={email} onChange={e => setEmail(e.target.value)} InputProps={{ startAdornment: (<InputAdornment position="start"><EmailIcon color="action" /></InputAdornment>), }} />
+          <TextField margin="normal" required fullWidth label="Пароль" type="password" value={password} onChange={e => setPassword(e.target.value)} InputProps={{ startAdornment: ( <InputAdornment position="start"><VpnKeyIcon color="action" /></InputAdornment>), }} />
+          <Button type="submit" fullWidth variant="contained" size="large" disabled={loading} sx={{ mt: 3, mb: 2, borderRadius: 2, height: 50, fontWeight: "bold" }}>
             {loading ? <CircularProgress size={24} color="inherit" /> : "Войти"}
           </Button>
-
           <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
             <Typography variant="body2" color="text.secondary">
-              Нет аккаунта?{" "}
-              <Link to="/register" style={{ textDecoration: "none", color: "#2563eb", fontWeight: "bold" }}>
-                Зарегистрироваться
-              </Link>
+              Нет аккаунта? <Link to="/register" style={{ textDecoration: "none", color: "#2563eb", fontWeight: "bold" }}>Зарегистрироваться</Link>
             </Typography>
           </Box>
         </Box>

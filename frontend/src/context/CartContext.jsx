@@ -5,72 +5,58 @@ import { useNotification } from "../context/NotificationContext";
 export const CartContext = createContext();
 
 export function CartProvider({ children }) {
-    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    // 🔥 ЖЕСТКО ПРОПИСЫВАЕМ ССЫЛКУ
+    const API_URL = "https://buypeak.onrender.com";
+    
     const { user } = useContext(AuthContext);
     const [cart, setCart] = useState([]);
     const { showNotification } = useNotification(); 
 
     useEffect(() => {
         if (user) {
-            fetch(`${API_URL}/cart/${user.id}` || `http://localhost:5000/cart/${user.id}`)
+            fetch(`${API_URL}/cart/${user.id}`)
                 .then(res => res.json())
-                .then(data => setCart(data))
+                .then(data => {
+                    if (Array.isArray(data)) setCart(data);
+                })
                 .catch(err => console.error("Ошибка загрузки корзины:", err));
         } else {
-            setCart([]);
+            const localCart = JSON.parse(localStorage.getItem("guest_cart") || "[]");
+            setCart(localCart);
         }
     }, [user]);
 
-    useEffect(() => {
-    if (user) {
-      if (cart.length > 0) {
-          fetch(`${API_URL}/cart/${user.id}` || `http://localhost:5000/cart/${user.id}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ items: cart }),
-          }).catch(console.error);
-      }
-    } else {
-      localStorage.setItem("guest_cart", JSON.stringify(cart));
-    }
-  }, [cart, user]);
-
-    const saveToServer = (newCartItems) => {
-        if (!user) return;
-
-        fetch(`${API_URL}/cart/${user.id}` || `http://localhost:5000/cart/${user.id}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ items: newCartItems }),
-        }).catch(err => console.error("Ошибка сохранения корзины:", err));
+    const saveCartState = (newCartItems) => {
+        if (user) {
+            fetch(`${API_URL}/cart/${user.id}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ items: newCartItems }),
+            }).catch(err => console.error("Ошибка сохранения корзины:", err));
+        } else {
+            localStorage.setItem("guest_cart", JSON.stringify(newCartItems));
+        }
     };
 
     const addToCart = (product) => {
         setCart((prev) => {
             const existing = prev.find((item) => item.id === product.id);
             let newCart;
-
             if (existing) {
-                newCart = prev.map((item) => 
-                    item.id === product.id
-                    ? {...item, quantity: item.quantity + (product.quantity || 1) } : item
-                );
+                newCart = prev.map((item) => item.id === product.id ? {...item, quantity: item.quantity + (product.quantity || 1) } : item);
             } else {
                 newCart = [...prev, { ...product, quantity: product.quantity || 1}];
             }
-            
-            saveToServer(newCart);
-            showNotification(`Товар "${product.title}" добавлен в корзину!`, "success");
+            saveCartState(newCart);
+            showNotification(`Товар "${product.name || product.title}" добавлен в корзину!`, "success");
             return newCart;
         });
     };
 
     const updateQuantity = (id, qty) => {
         setCart((prev) => {
-            const newCart = prev.map((item) =>
-                item.id === id ? { ...item, quantity: Math.max(1, qty) } : item
-            );
-            saveToServer(newCart);
+            const newCart = prev.map((item) => item.id === id ? { ...item, quantity: Math.max(1, qty) } : item);
+            saveCartState(newCart);
             return newCart;
         });
     }
@@ -78,20 +64,19 @@ export function CartProvider({ children }) {
     const removeFromCart = (id) => {
         setCart((prev) => {
             const newCart = prev.filter((item) => item.id !== id);
-            saveToServer(newCart);
-            showNotification("Товар успешно удалён!", "success");
+            saveCartState(newCart);
+            showNotification("Товар удалён из корзины", "info");
             return newCart;
         });
     };
 
     const clearCart = () => {
         setCart([]);
-        saveToServer([]);
-        showNotification("Корзина успешно очищена!", "success");
+        saveCartState([]);
     };
 
     return (
-        <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, updateQuantity}}>
+        <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, updateQuantity }}>
             {children}
         </CartContext.Provider>
     )
