@@ -17,6 +17,9 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import InventoryIcon from '@mui/icons-material/Inventory';
 
 export default function Catalog() {
+  // 🔥 ВАЖНО: Используем переменную окружения!
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
