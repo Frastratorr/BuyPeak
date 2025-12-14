@@ -39,7 +39,9 @@ const countryCodes = [
 ];
 
 export default function CheckoutPage() {
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
+  // 🔥 ВАЖНО: Добавили определение URL API
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
   const { cart, clearCart } = useContext(CartContext);
   const { user } = useContext(AuthContext);
   const { showNotification } = useNotification();
@@ -83,6 +85,7 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!formData.address || !formData.city || !formData.phone || !formData.country) {
         return showNotification("Заполните все поля адреса", "warning");
     }
@@ -91,8 +94,10 @@ export default function CheckoutPage() {
     }
 
     const fullPhoneNumber = `${phoneCode} ${formData.phone}`;
+
+    // 🔥 Очистка данных перед отправкой (чтобы ID были правильные)
     const sanitizedItems = cart.map(item => ({
-        id: item.id || item._id,
+        id: item.id || item._id, // Берем ID или _id
         name: item.name,
         quantity: item.quantity,
         price: item.price,
@@ -100,7 +105,7 @@ export default function CheckoutPage() {
     }));
 
     const newOrder = {
-      userId: user?.id || "guest",
+      userId: user?.id,
       items: sanitizedItems,
       total: finalPrice,
       shippingInfo: {
@@ -113,29 +118,28 @@ export default function CheckoutPage() {
     };
 
     try {
+      // 🔥 ИСПРАВЛЕНО: Используем API_URL вместо localhost
       const res = await fetch(`${API_URL}/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newOrder)
       });
 
+      // Читаем ответ сервера, чтобы понять причину ошибки, если она есть
       const data = await res.json();
 
       if (!res.ok) {
-          throw new Error(data.error || "Ошибка при создании заказа");
+          throw new Error(data.error || "Ошибка заказа");
       }
 
       clearCart();
       showNotification("Заказ успешно оформлен!", "success");
-      if (user && user.id) {
-          navigate(`/profile/${user.id}`);
-      } else {
-          navigate("/");
-      }
+      navigate(`/profile/${user?.id}`);
 
     } catch (err) {
       console.error(err);
-      showNotification(err.message, "error");
+      // Показываем реальный текст ошибки
+      showNotification(err.message || "Не удалось оформить заказ", "error");
     }
   };
 
@@ -146,7 +150,7 @@ export default function CheckoutPage() {
       <form onSubmit={handleSubmit}>
         <Grid container spacing={4}>
           
-          <Grid size={{ xs: 12, md: 8 }}>
+          <Grid item xs={12} md={8}>
             <Stack spacing={3}>
               
               <Paper elevation={3} sx={{ p: 3, borderRadius: 3 }}>
@@ -156,7 +160,7 @@ export default function CheckoutPage() {
                 </Box>
                 
                 <Grid container spacing={2}>
-                    <Grid size={{ xs: 12 }}>
+                    <Grid item xs={12}>
                         <TextField 
                             label="ФИО Получателя" fullWidth required 
                             name="fullName" value={formData.fullName} onChange={handleChange}
@@ -164,7 +168,7 @@ export default function CheckoutPage() {
                         />
                     </Grid>
 
-                    <Grid size={{ xs: 12, sm: 6 }}>
+                    <Grid item xs={12} sm={6}>
                         <TextField 
                             label="Страна" fullWidth required
                             name="country"
@@ -173,7 +177,7 @@ export default function CheckoutPage() {
                         />
                     </Grid>
                     
-                    <Grid size={{ xs: 12, sm: 6 }}>
+                    <Grid item xs={12} sm={6}>
                         <Box sx={{ display: 'flex', gap: 1 }}>
                             <TextField
                                 select
@@ -206,7 +210,7 @@ export default function CheckoutPage() {
                         </Box>
                     </Grid>
 
-                    <Grid size={{ xs: 12 }}>
+                    <Grid item xs={12}>
                         <Box sx={{ display: 'flex', gap: 1 }}>
                             <TextField
                                 label="Город" fullWidth required 
@@ -241,19 +245,19 @@ export default function CheckoutPage() {
                             <CreditCard fontSize="small" /> Данные карты
                         </Typography>
                         <Grid container spacing={2}>
-                            <Grid size={{ xs: 12 }}>
+                            <Grid item xs={12}>
                                 <TextField 
                                     label="Номер карты" fullWidth placeholder="0000 0000 0000 0000"
                                     name="cardNumber" value={formData.cardNumber} onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid size={{ xs: 6 }}>
+                            <Grid item xs={6}>
                                 <TextField 
                                     label="Срок (MM/YY)" fullWidth placeholder="12/25"
                                     name="expiry" value={formData.expiry} onChange={handleChange}
                                 />
                             </Grid>
-                            <Grid size={{ xs: 6 }}>
+                            <Grid item xs={6}>
                                 <TextField 
                                     label="CVV" fullWidth type="password" placeholder="123"
                                     name="cvv" value={formData.cvv} onChange={handleChange}
@@ -266,13 +270,13 @@ export default function CheckoutPage() {
             </Stack>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid item xs={12} md={4}>
             <Paper elevation={3} sx={{ p: 3, borderRadius: 3, position: 'sticky', top: 100 }}>
                 <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>Ваш заказ</Typography>
                 
                 <Stack spacing={1.5} sx={{ mb: 2 }}>
                     {cart.map(item => (
-                        <Box key={item.id || item._id} sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                        <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                             <Typography noWrap sx={{ maxWidth: '70%' }}>{item.name} x{item.quantity}</Typography>
                             <Typography fontWeight="bold">
                                 {((Number(String(item.price).replace(/[^0-9.]/g, '')) || 0) * item.quantity).toFixed(2)}$
