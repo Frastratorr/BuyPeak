@@ -5,13 +5,14 @@ import { useNotification } from "../context/NotificationContext";
 export const CartContext = createContext();
 
 export function CartProvider({ children }) {
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
     const { user } = useContext(AuthContext);
     const [cart, setCart] = useState([]);
     const { showNotification } = useNotification(); 
 
     useEffect(() => {
         if (user) {
-            fetch(`http://localhost:5000/cart/${user.id}`)
+            fetch(`${API_URL}/cart/${user.id}` || `http://localhost:5000/cart/${user.id}`)
                 .then(res => res.json())
                 .then(data => setCart(data))
                 .catch(err => console.error("Ошибка загрузки корзины:", err));
@@ -23,7 +24,7 @@ export function CartProvider({ children }) {
     useEffect(() => {
     if (user) {
       if (cart.length > 0) {
-          fetch(`http://localhost:5000/cart/${user.id}`, {
+          fetch(`${API_URL}/cart/${user.id}` || `http://localhost:5000/cart/${user.id}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ items: cart }),
@@ -37,7 +38,7 @@ export function CartProvider({ children }) {
     const saveToServer = (newCartItems) => {
         if (!user) return;
 
-        fetch(`http://localhost:5000/cart/${user.id}`, {
+        fetch(`${API_URL}/cart/${user.id}` || `http://localhost:5000/cart/${user.id}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ items: newCartItems }),

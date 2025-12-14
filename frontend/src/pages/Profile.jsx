@@ -37,7 +37,8 @@ import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 
 export default function Profile() {
   const DEFAULT_AVATAR = "https://res.cloudinary.com/dg2pcfylr/image/upload/v1765308214/default-avatar_e3ep28.jpg";
-
+  
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
   const { user: currentUser, updateUser } = useContext(AuthContext);
   const { showNotification } = useNotification();
   const { id: userIdParam } = useParams();
@@ -68,7 +69,7 @@ export default function Profile() {
 
     setLoading(true);
 
-    fetch(`http://localhost:5000/users/${targetId}`)
+    fetch(`${API_URL}/users/${targetId}`)
       .then(res => {
         if (!res.ok) throw new Error("User not found");
         return res.json();
@@ -86,7 +87,7 @@ export default function Profile() {
       .catch(() => setProfileUser(null))
       .finally(() => setLoading(false));
 
-    fetch("http://localhost:5000/reviews")
+    fetch(`${API_URL}/reviews`)
       .then(res => res.json())
       .then(data => {
         const userReviews = data.filter(r => String(r.userId) === String(targetId));
@@ -95,7 +96,7 @@ export default function Profile() {
       .catch(console.error);
 
     if (isMyProfile || targetId) {
-        fetch(`http://localhost:5000/orders/${targetId}`)
+        fetch(`${API_URL}/orders/${targetId}`)
             .then(res => res.json())
             .then(data => setPurchaseHistory(Array.isArray(data) ? data : []))
             .catch(console.error);
@@ -144,7 +145,7 @@ export default function Profile() {
     if (!isMyProfile) return;
     try {
       const updatedUser = { ...profileUser, name, email, avatar, bio };
-      const res = await fetch(`http://localhost:5000/users/${currentUser.id}`, {
+      const res = await fetch(`${API_URL}/users/${currentUser.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedUser),

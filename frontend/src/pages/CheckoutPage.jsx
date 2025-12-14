@@ -39,6 +39,7 @@ const countryCodes = [
 ];
 
 export default function CheckoutPage() {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
   const { cart, clearCart } = useContext(CartContext);
   const { user } = useContext(AuthContext);
   const { showNotification } = useNotification();
@@ -112,7 +113,7 @@ export default function CheckoutPage() {
     };
 
     try {
-      const res = await fetch("http://localhost:5000/orders", {
+      const res = await fetch(`${API_URL}/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newOrder)

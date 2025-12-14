@@ -13,10 +13,11 @@ import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import { useEffect, useState } from 'react';
 
 export default function Home() {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/products")
+    fetch(`${API_URL}/products`)
     .then(res => res.json())
     .then(data => {
       if (Array.isArray(data)) {

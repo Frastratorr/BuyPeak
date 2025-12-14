@@ -15,6 +15,7 @@ import {
 } from "@mui/icons-material";
 
 export default function AdminPage() {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
   const { user } = useContext(AuthContext);
   const { showNotification } = useNotification();
   const navigate = useNavigate();
@@ -44,21 +45,21 @@ export default function AdminPage() {
   }, [user]);
 
   const fetchProducts = () => {
-    fetch("http://localhost:5000/products")
+    fetch(`${API_URL}/products`)
       .then(res => { if(!res.ok) throw new Error(); return res.json(); })
       .then(data => setProducts(Array.isArray(data) ? data : []))
       .catch(() => console.log("Products fetch error"));
   };
 
   const fetchOrders = () => {
-    fetch("http://localhost:5000/admin/orders")
+    fetch(`${API_URL}/admin/orders`)
       .then(res => { if(!res.ok) throw new Error(); return res.json(); })
       .then(data => setOrders(Array.isArray(data) ? data.reverse() : []))
       .catch(() => console.log("Orders fetch error"));
   };
 
   const fetchUsers = () => {
-    fetch("http://localhost:5000/users")
+    fetch(`${API_URL}/users`)
       .then(res => { if(!res.ok) throw new Error(); return res.json(); })
       .then(data => setUsersList(Array.isArray(data) ? data : []))
       .catch(() => console.log("Users fetch error"));
@@ -131,8 +132,8 @@ export default function AdminPage() {
 
     const id = editingProduct ? (editingProduct.id || editingProduct._id) : null;
     const url = id 
-        ? `http://localhost:5000/products/${id}`
-        : "http://localhost:5000/products";
+        ? `${API_URL}/products/${id}`
+        : "${API_URL}/products";
     
     const method = editingProduct ? "PUT" : "POST";
 
@@ -163,7 +164,7 @@ export default function AdminPage() {
   const handleDeleteProduct = async (id) => {
     if (!window.confirm("Удалить этот товар?")) return;
     try {
-        await fetch(`http://localhost:5000/products/${id}`, { method: "DELETE" });
+        await fetch(`${API_URL}/products/${id}`, { method: "DELETE" });
         showNotification("Товар удален", "info");
         fetchProducts();
     } catch (err) {
@@ -173,7 +174,7 @@ export default function AdminPage() {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-        await fetch(`http://localhost:5000/admin/orders/${orderId}`, {
+        await fetch(`${API_URL}/admin/orders/${orderId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ status: newStatus })
@@ -191,7 +192,7 @@ export default function AdminPage() {
     const targetId = targetUser.id || targetUser._id;
     const newRole = targetUser.role === "admin" ? "user" : "admin";
     try {
-        await fetch(`http://localhost:5000/users/${targetId}`, {
+        await fetch(`${API_URL}/users/${targetId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ role: newRole })
@@ -210,7 +211,7 @@ export default function AdminPage() {
     const targetId = targetUser.id || targetUser._id;
     const newStatus = !targetUser.isBlocked;
     try {
-        await fetch(`http://localhost:5000/users/${targetId}`, {
+        await fetch(`${API_URL}/users/${targetId}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ isBlocked: newStatus })

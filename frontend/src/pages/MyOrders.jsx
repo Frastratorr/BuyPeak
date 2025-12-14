@@ -36,6 +36,7 @@ const getStatusConfig = (status) => {
 };
 
 export default function MyOrders() {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
   const { user } = useContext(AuthContext);
   const location = useLocation();
   const [orders, setOrders] = useState([]);
@@ -45,7 +46,7 @@ export default function MyOrders() {
   useEffect(() => {
     if (!user) return;
 
-    fetch(`http://localhost:5000/orders/${user.id}`)
+    fetch(`${API_URL}/orders/${user.id}`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {

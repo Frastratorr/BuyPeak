@@ -18,6 +18,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 
 export default function Register() {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -39,7 +40,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/users", {
+      const res = await fetch(`${API_URL}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),

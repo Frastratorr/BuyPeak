@@ -28,6 +28,8 @@ import {
 import defaultAvatar from "../assets/img/default-avatar.jpg";
 
 export default function Navbar() {
+
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
   const { user, logout } = useContext(AuthContext);
   const { cart } = useContext(CartContext);
   const navigate = useNavigate();
@@ -42,7 +44,7 @@ export default function Navbar() {
     setOrdersAnchorEl(event.currentTarget);
     if (user) {
         try {
-            const res = await fetch(`http://localhost:5000/orders/${user.id}`);
+            const res = await fetch(`${API_URL}/orders/${user.id}`);
             
             if (!res.ok) {
                 setRecentOrders([]);

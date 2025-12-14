@@ -26,7 +26,7 @@ export default function Catalog() {
   const [minQuantity, setMinQuantity] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:5000/products")
+    fetch(`${API_URL}/products`)
       .then(res => res.json())
       .then(data => setProducts(Array.isArray(data) ? data : []))
       .catch(err => console.error(err))

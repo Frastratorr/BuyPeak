@@ -20,6 +20,7 @@ import EventIcon from "@mui/icons-material/Event";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 export default function OrdersPage() {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
   const { user } = useContext(AuthContext);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +28,7 @@ export default function OrdersPage() {
   useEffect(() => {
     if (!user) return;
 
-    fetch(`http://localhost:5000/orders/${user.id}`)
+    fetch(`${API_URL}/orders/${user.id}`)
       .then((res) => res.json())
       .then((data) => setOrders(data.reverse()))
       .catch((err) => console.error(err))

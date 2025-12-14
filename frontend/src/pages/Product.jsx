@@ -14,6 +14,7 @@ import ReviewsBlock from "../components/ReviewsBlock";
 import defaultAvatar from "../assets/img/default-avatar.jpg";
 
 export default function Product() {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
   const { id } = useParams();
   const { addToCart } = useContext(CartContext);
   const { user } = useContext(AuthContext);
@@ -28,7 +29,7 @@ export default function Product() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`http://localhost:5000/products/${id}`)
+    fetch(`${API_URL}/products/${id}`)
       .then(async (res) => {
         if (!res.ok) throw new Error("Товар не найден");
         return res.json();
@@ -48,7 +49,7 @@ export default function Product() {
     
     const pid = product.id || product._id;
     
-    fetch(`http://localhost:5000/reviews/product/${pid}`)
+    fetch(`${API_URL}/reviews/product/${pid}`)
       .then(res => res.json())
       .then(data => setReviews(Array.isArray(data) ? data : []))
       .catch(console.error);
@@ -79,7 +80,7 @@ export default function Product() {
     };
 
     try {
-      const res = await fetch("http://localhost:5000/reviews", {
+      const res = await fetch(`${API_URL}/reviews`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newItem),
@@ -111,7 +112,7 @@ export default function Product() {
   const handleDeleteReview = async (reviewId) => {
     if (!window.confirm("Удалить этот отзыв?")) return;
     try {
-      await fetch(`http://localhost:5000/reviews/${reviewId}`, { method: "DELETE" });
+      await fetch(`${API_URL}/reviews/${reviewId}`, { method: "DELETE" });
       setReviews(prev => prev.filter(r => r.id !== reviewId));
       showNotification("Отзыв удален", "info");
     } catch (err) {

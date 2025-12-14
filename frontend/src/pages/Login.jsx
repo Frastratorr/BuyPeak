@@ -17,6 +17,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 
 export default function Login() {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -31,7 +32,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/login", {
+      const res = await fetch(`${API_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
