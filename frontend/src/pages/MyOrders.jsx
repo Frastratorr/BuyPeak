@@ -36,7 +36,9 @@ const getStatusConfig = (status) => {
 };
 
 export default function MyOrders() {
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000"
+  // 🔥 ЖЕСТКАЯ ССЫЛКА НА СЕРВЕР
+  const API_URL = "https://buypeak.onrender.com";
+
   const { user } = useContext(AuthContext);
   const location = useLocation();
   const [orders, setOrders] = useState([]);
@@ -47,16 +49,19 @@ export default function MyOrders() {
     if (!user) return;
 
     fetch(`${API_URL}/orders/${user.id}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Ошибка загрузки");
+        return res.json();
+      })
       .then((data) => {
         if (Array.isArray(data)) {
             const sorted = data.reverse();
             setOrders(sorted);
 
+            // Логика для открытия конкретного заказа (если перешли из меню)
             if (location.state?.targetOrderId) {
                 const targetId = location.state.targetOrderId;
                 setExpanded(targetId);
-                
                 setTimeout(() => {
                     const element = document.getElementById(`order-${targetId}`);
                     if (element) {
@@ -94,7 +99,7 @@ export default function MyOrders() {
   }
 
   return (
-    <Box sx={{ maxWidth: "1000px", margin: "0 auto", padding: { xs: 2, md: 4 } }}>
+    <Box className="fade-in" sx={{ maxWidth: "1000px", margin: "0 auto", padding: { xs: 2, md: 4 } }}>
       <Typography variant="h4" fontWeight="bold" sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
         <ShoppingBagIcon fontSize="large" color="primary" />
         Мои заказы
@@ -134,24 +139,24 @@ export default function MyOrders() {
               >
                 <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: expanded === order.id ? '#e3f2fd' : '#fff', transition: 'background-color 0.3s' }}>
                   <Grid container alignItems="center" spacing={2}>
-                    <Grid size={{ xs: 12, sm: 3 }}>
+                    <Grid item xs={12} sm={3}>
                       <Typography variant="caption" color="text.secondary">Номер заказа</Typography>
                       <Typography fontWeight="bold">#{order.id.toString().slice(-6)}</Typography>
                     </Grid>
-                    <Grid size={{ xs: 6, sm: 3 }}>
+                    <Grid item xs={6} sm={3}>
                       <Typography variant="caption" color="text.secondary">Дата</Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, paddingRight: "60px" }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           <EventIcon fontSize="small" color="action" />
                           <Typography fontWeight="500" fontSize="0.9rem">
                               {new Date(order.date).toLocaleDateString()}
                           </Typography>
                       </Box>
                     </Grid>
-                    <Grid size={{ xs: 6, sm: 3 }}>
+                    <Grid item xs={6} sm={3}>
                       <Typography variant="caption" color="text.secondary">Сумма</Typography>
                       <Typography fontWeight="bold" color="primary">${Number(order.total).toFixed(2)}</Typography>
                     </Grid>
-                    <Grid size={{ xs: 12, sm: 3 }}>
+                    <Grid item xs={12} sm={3}>
                       <Chip 
                           label={statusConfig.label} 
                           color={statusConfig.color} 
