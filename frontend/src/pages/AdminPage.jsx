@@ -15,11 +15,13 @@ import {
 } from "@mui/icons-material";
 
 export default function AdminPage() {
-  // 🔥 ЖЕСТКАЯ ССЫЛКА НА БЭКЕНД
+  // 🔥 1. ССЫЛКА НА БЭКЕНД
   const API_URL = "https://buypeak.onrender.com";
 
-  // НАСТРОЙКИ CLOUDINARY
+  // 🔥 2. НАСТРОЙКИ CLOUDINARY (ВСТАВЬТЕ СВОИ ДАННЫЕ!)
+  // Имя облака (из Dashboard)
   const CLOUD_NAME = "dg2pcfylr"; 
+  // Имя пресета (Settings -> Upload -> Upload presets -> Signing Mode: Unsigned)
   const UPLOAD_PRESET = "ml_default"; 
 
   const { user } = useContext(AuthContext);
@@ -40,7 +42,6 @@ export default function AdminPage() {
   });
 
   useEffect(() => {
-    // Проверка прав админа
     if (!user || (user.email !== "admin@gmail.com" && user.role !== "admin")) {
         navigate("/");
         return;
@@ -84,9 +85,15 @@ export default function AdminPage() {
     setOpenProductModal(true);
   };
 
+  // 🔥 ИСПРАВЛЕННАЯ ЗАГРУЗКА ФОТО
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+        showNotification("Файл слишком большой! (макс 5MB)", "warning");
+        return;
+    }
 
     setUploadingImage(true);
     const formData = new FormData();
@@ -99,15 +106,24 @@ export default function AdminPage() {
             method: "POST",
             body: formData
         });
+        
         const data = await res.json();
+
+        // Ловим ошибку от Cloudinary
+        if (data.error) {
+            console.error("Cloudinary Error Details:", data.error);
+            throw new Error(data.error.message);
+        }
+
         if (data.secure_url) {
             setProductForm(prev => ({ ...prev, image: data.secure_url }));
             showNotification("Фото загружено!", "success");
         } else {
-            throw new Error("Ошибка загрузки");
+            throw new Error("Не удалось получить ссылку");
         }
     } catch (err) {
-        showNotification("Ошибка загрузки фото", "error");
+        console.error(err);
+        showNotification(`Ошибка загрузки: ${err.message}`, "error");
     } finally {
         setUploadingImage(false);
     }
